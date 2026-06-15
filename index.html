@@ -8,13 +8,17 @@
     <!-- 🟢 1. 引入 Supabase 官方 SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <script>
-        // 🟢 2. 配置你的专属 Supabase 数据库连接 (已自动去掉无效的 /rest/v1/ 后缀)
+<script>
+        // 🟢 2. 配置数据库连接（加入 window. 明确指定官方库，防止浏览器混淆）
         const supabaseUrl = 'https://wyvykqfmcatohbekwikg.supabase.co';
         const supabaseKey = 'sb_publishable_YaPCqd25hTc_xD-8ZOPZ0g_ssm05UU6';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // 加上 window. 后，即使有缓存或变量冲突，也能直接强行击穿强制连接！
+        window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // 兼容底部代码的旧变量名
+        const supabase = window.supabaseClient;
     </script>
-
     <style>
         /* 统一定义四套主题色 —— 高透液态玻璃 */
         :root[data-theme="light"] {
