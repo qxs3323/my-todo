@@ -9,15 +9,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
 <script>
-        // 🟢 2. 配置数据库连接（加入 window. 明确指定官方库，防止浏览器混淆）
         const supabaseUrl = 'https://wyvykqfmcatohbekwikg.supabase.co';
         const supabaseKey = 'sb_publishable_YaPCqd25hTc_xD-8ZOPZ0g_ssm05UU6';
-        
-        // 加上 window. 后，即使有缓存或变量冲突，也能直接强行击穿强制连接！
-        window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-        
-        // 兼容底部代码的旧变量名
-        const supabase = window.supabaseClient;
+        const { createClient } = window.supabase;
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
     </script>
     <style>
         /* 统一定义四套主题色 —— 高透液态玻璃 */
@@ -182,13 +177,13 @@
         // 🟢 从 Supabase 云端拉取最新数据
         async function loadDataFromSupabase() {
             // 拉取待办：按完成状态排序(未完成在前)，再按拖拽序号(order_index)排序
-            const { data: todoData } = await supabase.from('todos')
+            const { data: todoData } = await supabaseClient.from('todos')
                 .select('*')
                 .order('is_completed', { ascending: true })
                 .order('order_index', { ascending: true });
             
             // 拉取灵感：按创建时间倒序排列(最新的在最上)
-            const { data: ideaData } = await supabase.from('ideas')
+            const { data: ideaData } = await supabaseClient.from('ideas')
                 .select('*')
                 .order('created_at', { ascending: false });
 
@@ -247,7 +242,7 @@
                 const currentDOMElements = document.querySelectorAll('#todo-list .todo-item');
                 currentDOMElements.forEach((el, index) => {
                     const id = parseInt(el.dataset.id);
-                    updates.push(supabase.from('todos').update({ order_index: index }).eq('id', id));
+                    updates.push(supabaseClient.from('todos').update({ order_index: index }).eq('id', id));
                 });
                 
                 await Promise.all(updates);
@@ -272,7 +267,7 @@
                 if (!isEditingMode) return;
                 const updatedText = input.value.trim();
                 if (updatedText && updatedText !== currentText) {
-                    await supabase.from('todos').update({ text: updatedText }).eq('id', id);
+                    await supabaseClient.from('todos').update({ text: updatedText }).eq('id', id);
                 }
                 isEditingMode = false;
                 loadDataFromSupabase();
@@ -297,7 +292,7 @@
                 if (!isEditingMode) return;
                 const updatedText = textarea.value.trim();
                 if (updatedText && updatedText !== currentText) {
-                    await supabase.from('ideas').update({ text: updatedText }).eq('id', id);
+                    await supabaseClient.from('ideas').update({ text: updatedText }).eq('id', id);
                 }
                 isEditingMode = false;
                 loadDataFromSupabase();
@@ -378,14 +373,14 @@
             const input = document.getElementById('todo-input');
             const text = input.value.trim();
             if (!text) return;
-            await supabase.from('todos').insert([{ text: text, is_completed: false, order_index: todos.length }]);
+            await supabaseClient.from('todos').insert([{ text: text, is_completed: false, order_index: todos.length }]);
             input.value = '';
             loadDataFromSupabase();
         }
 
         // 🟢 Supabase 写入：切换完成状态
         async function toggleTodo(id, currentStatus) {
-            await supabase.from('todos').update({ is_completed: !currentStatus }).eq('id', id);
+            await supabaseClient.from('todos').update({ is_completed: !currentStatus }).eq('id', id);
             loadDataFromSupabase();
         }
 
@@ -395,7 +390,7 @@
             if(target) {
                 todoTrash.push({ id: target.id, text: target.text, time: formatTime(target.created_at), is_completed: target.is_completed });
                 localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
-                await supabase.from('todos').delete().eq('id', id);
+                await supabaseClient.from('todos').delete().eq('id', id);
                 loadDataFromSupabase();
             }
         }
@@ -404,7 +399,7 @@
         async function restoreTodo(id) {
             const target = todoTrash.find(t => t.id === id);
             if(target) {
-                await supabase.from('todos').insert([{ text: target.text, is_completed: target.is_completed, order_index: todos.length }]);
+                await supabaseClient.from('todos').insert([{ text: target.text, is_completed: target.is_completed, order_index: todos.length }]);
                 todoTrash = todoTrash.filter(t => t.id !== id);
                 localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
                 loadDataFromSupabase();
@@ -463,7 +458,7 @@
         // 🟢 Supabase 写入：添加灵感
         async function addIdea() {
             const input = document.getElementById('idea-input'); const text = input.value.trim(); if (!text) return;
-            await supabase.from('ideas').insert([{ text: text }]);
+            await supabaseClient.from('ideas').insert([{ text: text }]);
             input.value = ''; loadDataFromSupabase();
         }
 
@@ -473,7 +468,7 @@
             if(target) {
                 ideaTrash.push({ id: target.id, text: target.text, time: formatTime(target.created_at) });
                 localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
-                await supabase.from('ideas').delete().eq('id', id);
+                await supabaseClient.from('ideas').delete().eq('id', id);
                 loadDataFromSupabase();
             }
         }
@@ -482,7 +477,7 @@
         async function restoreIdea(id) {
             const target = ideaTrash.find(i => i.id === id);
             if(target) {
-                await supabase.from('ideas').insert([{ text: target.text }]);
+                await supabaseClient.from('ideas').insert([{ text: target.text }]);
                 ideaTrash = ideaTrash.filter(i => i.id !== id);
                 localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
                 loadDataFromSupabase();
@@ -510,3 +505,4 @@
     </script>
 </body>
 </html>
+
