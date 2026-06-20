@@ -48,7 +48,26 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease; }
         body { background-color: var(--bg-color); color: var(--text-main); padding: 40px 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
-        .header-bar { width: 100%; max-width: 1100px; display: flex; justify-content: flex-end; margin-bottom: 30px; animation: fadeInDown 0.5s ease; position: relative; z-index: 999; }
+        .hidden { display: none !important; }
+        .auth-shell, .app-shell { width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .auth-shell { flex: 1; justify-content: center; }
+        .auth-card { width: 100%; max-width: 460px; background: var(--card-bg); border-radius: 24px; padding: 36px 32px; box-shadow: var(--shadow-md); border: 1px solid var(--glass-border); animation: fadeInUp 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+        .auth-eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-todo); margin-bottom: 10px; }
+        .auth-card h1 { font-size: 2rem; margin-bottom: 10px; }
+        .auth-subtitle { color: var(--text-muted); line-height: 1.7; font-size: 0.95rem; margin-bottom: 24px; }
+        .auth-form { display: flex; flex-direction: column; gap: 14px; }
+        .auth-form input[type="email"], .auth-form input[type="password"] { width: 100%; height: 48px; padding: 0 16px; border: 1px solid var(--border-color); border-radius: calc(var(--radius) - 2px); font-size: 0.95rem; outline: none; background-color: var(--bg-color); color: var(--text-main); transition: var(--spring-transition); }
+        .auth-form input[type="email"]:focus, .auth-form input[type="password"]:focus { border-color: var(--accent-todo); transform: scale(1.01); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .auth-submit-btn { width: 100%; background: linear-gradient(135deg, var(--accent-todo), var(--accent-idea)); }
+        .auth-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+        .auth-switch-btn, .ghost-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.9rem; padding: 0; }
+        .auth-switch-btn strong, .ghost-btn strong { color: var(--text-main); font-weight: 600; }
+        .auth-message { min-height: 22px; margin-top: 12px; color: var(--text-muted); font-size: 0.88rem; }
+        .auth-message.error { color: #d35454; }
+        .auth-message.success { color: #2e8b57; }
+        .header-bar { width: 100%; max-width: 1100px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; animation: fadeInDown 0.5s ease; position: relative; z-index: 999; gap: 16px; }
+        .header-user { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.9rem; flex-wrap: wrap; }
+        .header-user strong { color: var(--text-main); font-weight: 600; }
         .custom-dropdown { position: relative; user-select: none; }
         .dropdown-btn { padding: 8px 35px 8px 20px; border-radius: 20px; background-color: var(--glass-bg); backdrop-filter: blur(4px) saturate(200%); -webkit-backdrop-filter: blur(4px) saturate(200%); border: 1.5px solid var(--glass-border); color: var(--text-main); font-size: 0.85rem; font-weight: 600; cursor: pointer; box-shadow: var(--glass-shadow); transition: var(--spring-transition); position: relative; }
         .dropdown-btn:hover { transform: translateY(-2px); background-color: rgba(255, 255, 255, 0.4); box-shadow: 0 14px 28px rgba(0,0,0,0.04); }
@@ -60,7 +79,7 @@
         .dropdown-item:hover { background-color: var(--glass-hover); }
         .dropdown-item.selected { font-weight: 700; background-color: var(--glass-hover); }
         .container { width: 100%; max-width: 1100px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-        @media (max-width: 768px) { .container { grid-template-columns: 1fr; gap: 20px; } }
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; gap: 20px; } .auth-card { padding: 30px 22px; } .header-bar { flex-direction: column; align-items: stretch; } .header-user { justify-content: space-between; } }
         .panel { background: var(--card-bg); border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; height: 78vh; min-height: 540px; position: relative; animation: fadeInUp 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
         h2 { font-size: 1.65rem; font-weight: 700; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px dashed var(--border-color); display: flex; align-items: center; justify-content: space-between; }
         .todo-title { color: var(--accent-todo); } .idea-title { color: var(--accent-idea); }
@@ -110,45 +129,70 @@
 </head>
 <body>
 
-    <div class="header-bar">
-        <div class="custom-dropdown" id="theme-dropdown">
-            <div class="dropdown-btn" id="dropdown-title" onclick="toggleDropdown(event)">简约浅灰</div>
-            <div class="dropdown-menu">
-                <div class="dropdown-item" data-value="light" onclick="selectTheme('light', '简约浅灰')">简约浅灰</div>
-                <div class="dropdown-item" data-value="cute-pink" onclick="selectTheme('cute-pink', '温柔甜妹')">温柔甜妹</div>
-                <div class="dropdown-item" data-value="dark" onclick="selectTheme('dark', '优雅深色')">优雅深色</div>
-                <div class="dropdown-item" data-value="forest" onclick="selectTheme('forest', '复古森林')">复古森林</div>
+    <div class="auth-shell" id="auth-shell">
+        <div class="auth-card">
+            <div class="auth-eyebrow">随心工作台</div>
+            <h1 id="auth-title">邮箱登录</h1>
+            <p class="auth-subtitle" id="auth-subtitle">先用邮箱进入你的工作台。风格和当前页面保持一致，操作也尽量轻一点。</p>
+            <div class="auth-form">
+                <input type="email" id="auth-email" placeholder="输入邮箱地址">
+                <input type="password" id="auth-password" placeholder="输入密码" onkeydown="if(event.key==='Enter') handleAuthSubmit()">
+                <button class="main-btn auth-submit-btn" id="auth-submit-btn" onclick="handleAuthSubmit()">立即登录</button>
             </div>
+            <div class="auth-footer">
+                <button class="auth-switch-btn" id="auth-switch-btn" onclick="toggleAuthMode()">没有账号？<strong>去注册</strong></button>
+                <button class="ghost-btn" id="auth-magic-btn" onclick="sendMagicLink()">发送邮箱登录链接</button>
+            </div>
+            <div class="auth-message" id="auth-message"></div>
         </div>
     </div>
 
-    <div class="container">
-        <div class="panel">
-            <h2 class="todo-title">
-                <span id="todo-panel-title">每日待办</span>
-                <button class="panel-action-btn" id="todo-trash-toggle" onclick="toggleTodoTrash()">回收站</button>
-            </h2>
-            
-            <div class="input-group" id="todo-input-zone">
-                <input type="text" id="todo-input" placeholder="输入今天的任务..." onkeydown="if(event.key==='Enter') addTodo()">
-                <button class="main-btn todo-btn" onclick="addTodo()">添加</button>
+    <div class="app-shell hidden" id="app-shell">
+        <div class="header-bar">
+            <div class="header-user">
+                <span>已登录：</span>
+                <strong id="user-email">-</strong>
+                <button class="panel-action-btn" onclick="signOut()">退出登录</button>
             </div>
-            
-            <div class="list-container" id="todo-list"></div>
+            <div class="custom-dropdown" id="theme-dropdown">
+                <div class="dropdown-btn" id="dropdown-title" onclick="toggleDropdown(event)">简约浅灰</div>
+                <div class="dropdown-menu">
+                    <div class="dropdown-item" data-value="light" onclick="selectTheme('light', '简约浅灰')">简约浅灰</div>
+                    <div class="dropdown-item" data-value="cute-pink" onclick="selectTheme('cute-pink', '温柔甜妹')">温柔甜妹</div>
+                    <div class="dropdown-item" data-value="dark" onclick="selectTheme('dark', '优雅深色')">优雅深色</div>
+                    <div class="dropdown-item" data-value="forest" onclick="selectTheme('forest', '复古森林')">复古森林</div>
+                </div>
+            </div>
         </div>
 
-        <div class="panel">
-            <h2 class="idea-title">
-                <span id="idea-panel-title">灵感闪现</span>
-                <button class="panel-action-btn" id="idea-trash-toggle" onclick="toggleIdeaTrash()">回收站</button>
-            </h2>
-            
-            <div class="input-group" id="idea-input-zone">
-                <textarea class="unified-input" id="idea-input" placeholder="捕捉瞬间的想法... Ctrl+Enter 提交"></textarea>
-                <button class="main-btn idea-btn" onclick="addIdea()">记录</button>
+        <div class="container">
+            <div class="panel">
+                <h2 class="todo-title">
+                    <span id="todo-panel-title">每日待办</span>
+                    <button class="panel-action-btn" id="todo-trash-toggle" onclick="toggleTodoTrash()">回收站</button>
+                </h2>
+                
+                <div class="input-group" id="todo-input-zone">
+                    <input type="text" id="todo-input" placeholder="输入今天的任务..." onkeydown="if(event.key==='Enter') addTodo()">
+                    <button class="main-btn todo-btn" onclick="addTodo()">添加</button>
+                </div>
+                
+                <div class="list-container" id="todo-list"></div>
             </div>
-            
-            <div class="list-container" id="idea-list"></div>
+
+            <div class="panel">
+                <h2 class="idea-title">
+                    <span id="idea-panel-title">灵感闪现</span>
+                    <button class="panel-action-btn" id="idea-trash-toggle" onclick="toggleIdeaTrash()">回收站</button>
+                </h2>
+                
+                <div class="input-group" id="idea-input-zone">
+                    <textarea class="unified-input" id="idea-input" placeholder="捕捉瞬间的想法... Ctrl+Enter 提交"></textarea>
+                    <button class="main-btn idea-btn" onclick="addIdea()">记录</button>
+                </div>
+                
+                <div class="list-container" id="idea-list"></div>
+            </div>
         </div>
     </div>
 
@@ -159,6 +203,8 @@
         let todoTrash = JSON.parse(localStorage.getItem('my_todo_trash')) || [];
         let ideaTrash = JSON.parse(localStorage.getItem('my_idea_trash')) || [];
         let currentTheme = localStorage.getItem('my_theme') || 'light';
+        let currentUser = null;
+        let isAuthLoginMode = true;
 
         const themeNamesMap = { 'light': '简约浅灰', 'cute-pink': '温柔甜妹', 'dark': '优雅深色', 'forest': '复古森林' };
         let isTodoTrashView = false; let isIdeaTrashView = false;
@@ -167,15 +213,144 @@
         const dragPlaceholder = document.createElement('div');
         dragPlaceholder.className = 'drag-placeholder';
 
-        window.onload = function() {
+        window.onload = async function() {
             initTheme(currentTheme);
-            loadDataFromSupabase(); // 初始化时从云端拉取数据
             setupDragAndDrop();
-            document.addEventListener('click', function() { document.getElementById('theme-dropdown').classList.remove('active'); });
+            setupGlobalEvents();
+            syncAuthCopy();
+
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            handleAuthState(session ? session.user : null);
+
+            supabaseClient.auth.onAuthStateChange((_event, session) => {
+                handleAuthState(session ? session.user : null);
+            });
         };
+
+        function setupGlobalEvents() {
+            document.addEventListener('click', function(event) {
+                const dropdown = document.getElementById('theme-dropdown');
+                if (dropdown && !dropdown.contains(event.target)) {
+                    dropdown.classList.remove('active');
+                }
+            });
+
+            const ideaInput = document.getElementById('idea-input');
+            if (ideaInput) {
+                ideaInput.addEventListener('keydown', function(e) {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); addIdea(); }
+                });
+            }
+        }
+
+        function handleAuthState(user) {
+            currentUser = user;
+            const authShell = document.getElementById('auth-shell');
+            const appShell = document.getElementById('app-shell');
+            const userEmail = document.getElementById('user-email');
+
+            if (user) {
+                authShell.classList.add('hidden');
+                appShell.classList.remove('hidden');
+                userEmail.innerText = user.email || '未命名邮箱';
+                setAuthMessage('');
+                loadDataFromSupabase();
+            } else {
+                authShell.classList.remove('hidden');
+                appShell.classList.add('hidden');
+                userEmail.innerText = '-';
+                todos = [];
+                ideas = [];
+                renderTodos();
+                renderIdeas();
+            }
+        }
+
+        function syncAuthCopy() {
+            document.getElementById('auth-title').innerText = isAuthLoginMode ? '邮箱登录' : '邮箱注册';
+            document.getElementById('auth-subtitle').innerText = isAuthLoginMode
+                ? '先用邮箱进入你的工作台。风格和当前页面保持一致，操作也尽量轻一点。'
+                : '注册一个邮箱账号后，就能继续使用这套简洁的随心工作台。';
+            document.getElementById('auth-submit-btn').innerText = isAuthLoginMode ? '立即登录' : '创建账号';
+            document.getElementById('auth-switch-btn').innerHTML = isAuthLoginMode
+                ? '没有账号？<strong>去注册</strong>'
+                : '已有账号？<strong>去登录</strong>';
+            document.getElementById('auth-magic-btn').style.display = isAuthLoginMode ? 'inline-block' : 'none';
+            setAuthMessage('');
+        }
+
+        function toggleAuthMode() {
+            isAuthLoginMode = !isAuthLoginMode;
+            syncAuthCopy();
+        }
+
+        function setAuthMessage(message, type = '') {
+            const el = document.getElementById('auth-message');
+            el.className = type ? `auth-message ${type}` : 'auth-message';
+            el.innerText = message;
+        }
+
+        function getAuthFormValue() {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+            return { email, password };
+        }
+
+        async function handleAuthSubmit() {
+            const { email, password } = getAuthFormValue();
+            if (!email || !password) {
+                setAuthMessage('请先输入邮箱和密码。', 'error');
+                return;
+            }
+
+            setAuthMessage(isAuthLoginMode ? '正在登录...' : '正在创建账号...');
+
+            if (isAuthLoginMode) {
+                const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                if (error) {
+                    setAuthMessage(error.message || '登录失败，请稍后再试。', 'error');
+                    return;
+                }
+                setAuthMessage('登录成功。', 'success');
+            } else {
+                const { error } = await supabaseClient.auth.signUp({ email, password });
+                if (error) {
+                    setAuthMessage(error.message || '注册失败，请稍后再试。', 'error');
+                    return;
+                }
+                setAuthMessage('注册成功，请检查邮箱确认链接。', 'success');
+            }
+        }
+
+        async function sendMagicLink() {
+            const { email } = getAuthFormValue();
+            if (!email) {
+                setAuthMessage('先输入邮箱，再发送登录链接。', 'error');
+                return;
+            }
+
+            setAuthMessage('正在发送登录链接...');
+            const { error } = await supabaseClient.auth.signInWithOtp({ email });
+            if (error) {
+                setAuthMessage(error.message || '发送失败，请稍后再试。', 'error');
+                return;
+            }
+            setAuthMessage('登录链接已发送，请去邮箱查看。', 'success');
+        }
+
+        async function signOut() {
+            const { error } = await supabaseClient.auth.signOut();
+            if (error) {
+                setAuthMessage(error.message || '退出失败，请稍后再试。', 'error');
+                return;
+            }
+            document.getElementById('auth-password').value = '';
+            setAuthMessage('你已退出登录。', 'success');
+        }
 
         // 🟢 从 Supabase 云端拉取最新数据
         async function loadDataFromSupabase() {
+            if (!currentUser) return;
             // 拉取待办：按完成状态排序(未完成在前)，再按拖拽序号(order_index)排序
             const { data: todoData } = await supabaseClient.from('todos')
                 .select('*')
@@ -193,10 +368,6 @@
             renderTodos();
             renderIdeas();
         }
-
-        document.getElementById('idea-input').addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); addIdea(); }
-        });
 
         // --- 零抖动的实体占位符拖拽算法 (已对接云端更新) ---
         function setupDragAndDrop() {
