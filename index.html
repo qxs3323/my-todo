@@ -62,6 +62,7 @@
         .auth-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
         .auth-switch-btn, .ghost-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.9rem; padding: 0; }
         .auth-switch-btn strong, .ghost-btn strong { color: var(--text-main); font-weight: 600; }
+        .auth-link-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
         .auth-message { min-height: 22px; margin-top: 12px; color: var(--text-muted); font-size: 0.88rem; }
         .auth-message.error { color: #d35454; }
         .auth-message.success { color: #2e8b57; }
@@ -143,6 +144,9 @@
                 <button class="auth-switch-btn" id="auth-switch-btn" onclick="toggleAuthMode()">没有账号？<strong>去注册</strong></button>
                 <button class="ghost-btn" id="auth-magic-btn" onclick="sendMagicLink()">发送邮箱登录链接</button>
             </div>
+            <div class="auth-link-row">
+                <button class="ghost-btn" id="auth-resend-btn" onclick="resendConfirmation()">重新发送确认邮件</button>
+            </div>
             <div class="auth-message" id="auth-message"></div>
         </div>
     </div>
@@ -219,6 +223,7 @@
             setupGlobalEvents();
             syncAuthCopy();
 
+            await handleAuthCallback();
             const { data: { session } } = await supabaseClient.auth.getSession();
             handleAuthState(session ? session.user : null);
 
@@ -276,6 +281,7 @@
                 ? '没有账号？<strong>去注册</strong>'
                 : '已有账号？<strong>去登录</strong>';
             document.getElementById('auth-magic-btn').style.display = isAuthLoginMode ? 'inline-block' : 'none';
+            document.getElementById('auth-resend-btn').style.display = isAuthLoginMode ? 'none' : 'inline-block';
             setAuthMessage('');
         }
 
@@ -296,6 +302,38 @@
             return { email, password };
         }
 
+        function getRedirectUrl() {
+            if (window.location.origin && window.location.origin !== 'null') {
+                return `${window.location.origin}${window.location.pathname}`;
+            }
+            return window.location.href.split('?')[0].split('#')[0];
+        }
+
+        async function handleAuthCallback() {
+            const url = new URL(window.location.href);
+            const code = url.searchParams.get('code');
+            const errorDescription = url.searchParams.get('error_description');
+
+            if (errorDescription) {
+                setAuthMessage(decodeURIComponent(errorDescription), 'error');
+                return;
+            }
+
+            if (!code) return;
+
+            const { error } = await supabaseClient.auth.exchangeCodeForSession(code);
+            if (error) {
+                setAuthMessage(error.message || '邮箱确认失败，请重试。', 'error');
+                return;
+            }
+
+            url.searchParams.delete('code');
+            url.searchParams.delete('state');
+            url.searchParams.delete('type');
+            window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+            setAuthMessage('邮箱已确认，正在进入工作台...', 'success');
+        }
+
         async function handleAuthSubmit() {
             const { email, password } = getAuthFormValue();
             if (!email || !password) {
@@ -313,12 +351,16 @@
                 }
                 setAuthMessage('登录成功。', 'success');
             } else {
-                const { error } = await supabaseClient.auth.signUp({ email, password });
+                const { error } = await supabaseClient.auth.signUp({
+                    email,
+                    password,
+                    options: { emailRedirectTo: getRedirectUrl() }
+                });
                 if (error) {
                     setAuthMessage(error.message || '注册失败，请稍后再试。', 'error');
                     return;
                 }
-                setAuthMessage('注册成功，请检查邮箱确认链接。', 'success');
+                setAuthMessage('已发送确认邮件，请前往邮箱完成确认。确认后会自动回到这里。', 'success');
             }
         }
 
@@ -336,6 +378,26 @@
                 return;
             }
             setAuthMessage('登录链接已发送，请去邮箱查看。', 'success');
+        }
+
+        async function resendConfirmation() {
+            const { email } = getAuthFormValue();
+            if (!email) {
+                setAuthMessage('先输入邮箱，再重新发送确认邮件。', 'error');
+                return;
+            }
+
+            setAuthMessage('正在重新发送确认邮件...');
+            const { error } = await supabaseClient.auth.resend({
+                type: 'signup',
+                email,
+                options: { emailRedirectTo: getRedirectUrl() }
+            });
+            if (error) {
+                setAuthMessage(error.message || '发送失败，请稍后再试。', 'error');
+                return;
+            }
+            setAuthMessage('已重新发送确认邮件，请检查邮箱。', 'success');
         }
 
         async function signOut() {
