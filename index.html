@@ -312,6 +312,8 @@
         async function handleAuthCallback() {
             const url = new URL(window.location.href);
             const code = url.searchParams.get('code');
+            const tokenHash = url.searchParams.get('token_hash');
+            const authType = url.searchParams.get('type');
             const errorDescription = url.searchParams.get('error_description');
 
             if (errorDescription) {
@@ -319,15 +321,27 @@
                 return;
             }
 
-            if (!code) return;
+            if (!code && !tokenHash) return;
 
-            const { error } = await supabaseClient.auth.exchangeCodeForSession(code);
-            if (error) {
-                setAuthMessage(error.message || '邮箱确认失败，请重试。', 'error');
+            let authError = null;
+            if (code) {
+                const result = await supabaseClient.auth.exchangeCodeForSession(code);
+                authError = result.error;
+            } else {
+                const result = await supabaseClient.auth.verifyOtp({
+                    token_hash: tokenHash,
+                    type: authType || 'email'
+                });
+                authError = result.error;
+            }
+
+            if (authError) {
+                setAuthMessage(authError.message || '邮箱确认失败，请重试。', 'error');
                 return;
             }
 
             url.searchParams.delete('code');
+            url.searchParams.delete('token_hash');
             url.searchParams.delete('state');
             url.searchParams.delete('type');
             window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
@@ -372,12 +386,15 @@
             }
 
             setAuthMessage('正在发送登录链接...');
-            const { error } = await supabaseClient.auth.signInWithOtp({ email });
+            const { error } = await supabaseClient.auth.signInWithOtp({
+                email,
+                options: { emailRedirectTo: getRedirectUrl() }
+            });
             if (error) {
                 setAuthMessage(error.message || '发送失败，请稍后再试。', 'error');
                 return;
             }
-            setAuthMessage('登录链接已发送，请去邮箱查看。', 'success');
+            setAuthMessage('已发送登录链接，请打开邮箱点击链接后自动返回。', 'success');
         }
 
         async function resendConfirmation() {
