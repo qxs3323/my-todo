@@ -14,9 +14,6 @@
     </script>
 
     <style>
-        /* ============================================
-           四套主题色变量
-           ============================================ */
         :root[data-theme="light"] {
             --bg-color: #f0f2f5;
             --bg-gradient: linear-gradient(135deg, #e8ecf1 0%, #f5f7fa 40%, #eef1f5 100%);
@@ -139,41 +136,16 @@
         .hidden { display: none !important; }
 
         body {
-            background: var(--bg-gradient);
-            background-attachment: fixed;
-            color: var(--text-main);
-            padding: 40px 24px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
+            background: var(--bg-gradient); background-attachment: fixed;
+            color: var(--text-main); padding: 40px 24px;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; overflow-x: hidden;
             transition: background 1s var(--transition-smooth), color 0.6s ease;
         }
-        body::before, body::after {
-            content: '';
-            position: fixed;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-            transition: all 1.4s var(--transition-smooth);
-        }
-        body::before {
-            width: 600px; height: 600px;
-            top: -200px; right: -100px;
-            background: radial-gradient(circle, var(--accent-todo-glow) 0%, transparent 70%);
-            opacity: var(--decorative-opacity);
-        }
-        body::after {
-            width: 500px; height: 500px;
-            bottom: -150px; left: -100px;
-            background: radial-gradient(circle, var(--accent-idea-glow) 0%, transparent 70%);
-            opacity: var(--decorative-opacity);
-        }
+        body::before, body::after { content: ''; position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; transition: all 1.4s var(--transition-smooth); }
+        body::before { width: 600px; height: 600px; top: -200px; right: -100px; background: radial-gradient(circle, var(--accent-todo-glow) 0%, transparent 70%); opacity: var(--decorative-opacity); }
+        body::after { width: 500px; height: 500px; bottom: -150px; left: -100px; background: radial-gradient(circle, var(--accent-idea-glow) 0%, transparent 70%); opacity: var(--decorative-opacity); }
 
-        /* ============================================
-           主题专属动效容器
-           ============================================ */
         .theme-deco { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; overflow: hidden; opacity: 0; transition: opacity 1.6s var(--transition-smooth); }
         :root[data-theme="light"] .deco-light { opacity: 1; }
         :root[data-theme="dark"] .deco-dark { opacity: 1; }
@@ -181,133 +153,69 @@
         :root[data-theme="cute-pink"] .deco-pink { opacity: 1; }
 
         .dust-mote { position: absolute; border-radius: 50%; animation: dustDrift linear infinite; }
-        @keyframes dustDrift {
-            0%   { transform: translate(0, 0) scale(0.4); opacity: 0; }
-            8%   { opacity: var(--peak); }
-            70%  { opacity: var(--mid); }
-            100% { transform: translate(var(--dx), var(--dy)) scale(0.6); opacity: 0; }
-        }
+        @keyframes dustDrift { 0% { transform: translate(0,0) scale(0.4); opacity: 0; } 8% { opacity: var(--peak); } 70% { opacity: var(--mid); } 100% { transform: translate(var(--dx), var(--dy)) scale(0.6); opacity: 0; } }
         .star { position: absolute; background: white; border-radius: 50%; animation: twinkle var(--dur) ease-in-out infinite; opacity: 0; }
         @keyframes twinkle { 0%, 100% { opacity: 0; } 50% { opacity: var(--max-opacity); } }
-        .firefly { position: absolute; background: #c9a84c; border-radius: 50%; box-shadow: 0 0 6px 2px rgba(201, 168, 76, 0.3); animation: fireflyGlow ease-in-out infinite; }
-        @keyframes fireflyGlow {
-            0%, 100% { transform: translate(0, 0); opacity: 0; box-shadow: 0 0 2px 0px rgba(201, 168, 76, 0.1); }
-            12% { opacity: 0.65; box-shadow: 0 0 10px 4px rgba(201, 168, 76, 0.45); }
-            45% { transform: translate(var(--dx), var(--dy)); opacity: 0.25; box-shadow: 0 0 4px 1px rgba(201, 168, 76, 0.15); }
-            70% { opacity: 0.7; box-shadow: 0 0 12px 5px rgba(201, 168, 76, 0.5); }
-            92% { opacity: 0.05; box-shadow: 0 0 2px 0px rgba(201, 168, 76, 0.05); }
-        }
+        .firefly { position: absolute; background: #c9a84c; border-radius: 50%; box-shadow: 0 0 6px 2px rgba(201,168,76,0.3); animation: fireflyGlow ease-in-out infinite; }
+        @keyframes fireflyGlow { 0%,100% { transform: translate(0,0); opacity: 0; } 12% { opacity: 0.65; box-shadow: 0 0 10px 4px rgba(201,168,76,0.45); } 45% { transform: translate(var(--dx),var(--dy)); opacity: 0.25; } 70% { opacity: 0.7; box-shadow: 0 0 12px 5px rgba(201,168,76,0.5); } 92% { opacity: 0.05; } }
         .sparkle { position: absolute; background: white; border-radius: 50%; animation: sparklePop ease-in-out infinite; animation-duration: var(--sdur); }
-        @keyframes sparklePop {
-            0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
-            40% { opacity: 0.85; transform: scale(1.2) rotate(90deg); box-shadow: 0 0 10px 4px rgba(240, 98, 146, 0.35); }
-            60% { opacity: 0.4; transform: scale(0.7) rotate(180deg); box-shadow: 0 0 4px 1px rgba(240, 98, 146, 0.15); }
-            80% { opacity: 0.7; transform: scale(1) rotate(270deg); box-shadow: 0 0 8px 3px rgba(255, 138, 128, 0.3); }
-        }
+        @keyframes sparklePop { 0%,100% { opacity: 0; transform: scale(0) rotate(0deg); } 40% { opacity: 0.85; transform: scale(1.2) rotate(90deg); box-shadow: 0 0 10px 4px rgba(240,98,146,0.35); } 60% { opacity: 0.4; transform: scale(0.7) rotate(180deg); } 80% { opacity: 0.7; transform: scale(1) rotate(270deg); box-shadow: 0 0 8px 3px rgba(255,138,128,0.3); } }
 
-        /* ============================================
-           Shell 布局
-           ============================================ */
         .auth-shell, .app-shell { width: 100%; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 10; }
         .auth-shell { flex: 1; justify-content: center; }
 
-        /* ============================================
-           登录卡片
-           ============================================ */
         .auth-card {
             width: 100%; max-width: 440px;
-            background: var(--card-bg);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 40px 36px;
-            box-shadow: var(--panel-shadow);
-            animation: panelReveal 0.65s var(--transition-elastic) both;
+            background: var(--card-bg); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border); border-radius: 24px; padding: 40px 36px;
+            box-shadow: var(--panel-shadow); animation: panelReveal 0.65s var(--transition-elastic) both;
             transition: background 0.8s ease, border-color 0.8s ease, box-shadow 0.8s ease;
         }
-        .auth-eyebrow { font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-todo); margin-bottom: 8px; font-weight: 600; transition: color 0.6s ease; }
+        .auth-eyebrow { font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-todo); margin-bottom: 8px; font-weight: 600; }
         .auth-card h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
-        .auth-subtitle { color: var(--text-muted); line-height: 1.7; font-size: 0.9rem; margin-bottom: 28px; transition: color 0.6s ease; }
+        .auth-subtitle { color: var(--text-muted); line-height: 1.7; font-size: 0.9rem; margin-bottom: 28px; }
         .auth-form { display: flex; flex-direction: column; gap: 14px; }
-        .auth-form input[type="email"], .auth-form input[type="password"] {
+        .auth-form input {
             width: 100%; height: 48px; padding: 0 18px;
             border: 1.5px solid var(--border-color); border-radius: var(--radius-sm);
             font-size: 0.92rem; outline: none; background: var(--input-bg); color: var(--text-main);
             transition: all 0.35s var(--transition-elastic), background 0.6s ease, border-color 0.6s ease, color 0.6s ease;
         }
-        .auth-form input[type="email"]:focus, .auth-form input[type="password"]:focus {
-            border-color: var(--accent-todo); transform: scale(1.015); box-shadow: 0 0 0 3px var(--accent-todo-glow);
-        }
+        .auth-form input:focus { border-color: var(--accent-todo); transform: scale(1.015); box-shadow: 0 0 0 3px var(--accent-todo-glow); }
+        .auth-form input::placeholder { color: var(--text-muted); }
         .auth-submit-btn { width: 100%; margin-top: 4px; background: linear-gradient(135deg, var(--accent-todo), var(--accent-idea)); box-shadow: var(--btn-shadow); }
         .auth-submit-btn:hover { box-shadow: var(--btn-shadow-hover); }
+
         .auth-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
-        .auth-switch-btn, .ghost-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.85rem; padding: 0; transition: color 0.3s ease; }
-        .auth-switch-btn strong, .ghost-btn strong { color: var(--text-main); font-weight: 600; }
-        .auth-switch-btn:hover, .ghost-btn:hover { color: var(--accent-todo); }
-        .auth-link-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
-        .auth-message { min-height: 22px; margin-top: 14px; color: var(--text-muted); font-size: 0.85rem; transition: color 0.6s ease; }
+        .auth-switch-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.85rem; padding: 0; transition: color 0.3s ease; }
+        .auth-switch-btn strong { color: var(--text-main); font-weight: 600; }
+        .auth-switch-btn:hover { color: var(--accent-todo); }
+        .auth-message { min-height: 22px; margin-top: 14px; color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; }
         .auth-message.error { color: #ef4444; }
         .auth-message.success { color: #22c55e; }
 
-        /* ============================================
-           顶部栏
-           ============================================ */
-        .header-bar {
-            width: 100%; max-width: 1140px;
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 36px; position: relative; z-index: 100; gap: 16px;
-            animation: headerSlideIn 0.7s var(--transition-elastic);
-        }
-        .app-title {
-            font-size: 1.35rem; font-weight: 800; letter-spacing: -0.5px;
-            background: linear-gradient(135deg, var(--accent-todo), var(--accent-idea));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-            animation: titleFadeIn 0.8s 0.2s var(--transition-smooth) both;
-        }
+        .header-bar { width: 100%; max-width: 1140px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 36px; position: relative; z-index: 100; gap: 16px; animation: headerSlideIn 0.7s var(--transition-elastic); }
+        .app-title { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(135deg, var(--accent-todo), var(--accent-idea)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
         .header-right-group { display: flex; align-items: center; gap: 16px; }
-        .header-user { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted); transition: color 0.6s ease; }
-        .header-user strong { color: var(--text-main); font-weight: 600; transition: color 0.6s ease; }
+        .header-user { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted); }
+        .header-user strong { color: var(--text-main); font-weight: 600; }
 
         @keyframes headerSlideIn { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes titleFadeIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes panelReveal { from { opacity: 0; transform: translateY(32px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
-        /* ============================================
-           主题选择器
-           ============================================ */
         .custom-dropdown { position: relative; user-select: none; }
-        .dropdown-btn {
-            padding: 8px 35px 8px 20px; border-radius: 20px;
-            background-color: var(--glass-bg); backdrop-filter: blur(4px) saturate(200%); -webkit-backdrop-filter: blur(4px) saturate(200%);
-            border: 1.5px solid var(--glass-border); color: var(--text-main); font-size: 0.85rem; font-weight: 600;
-            cursor: pointer; box-shadow: var(--glass-shadow);
-            transition: transform 0.3s var(--transition-elastic), background-color 0.3s var(--transition-elastic), box-shadow 0.3s var(--transition-elastic), color 0.6s ease, border-color 0.6s ease;
-            position: relative;
-        }
-        .dropdown-btn:hover { transform: translateY(-2px); background-color: rgba(255, 255, 255, 0.4); box-shadow: 0 14px 28px rgba(0,0,0,0.04); }
-        .dropdown-btn::after { content: ""; position: absolute; right: 16px; top: 52%; transform: translateY(-50%); border: 4px solid transparent; border-top-color: var(--text-muted); transition: transform 0.3s var(--transition-elastic), border-color 0.6s ease; }
+        .dropdown-btn { padding: 8px 35px 8px 20px; border-radius: 20px; background-color: var(--glass-bg); backdrop-filter: blur(4px) saturate(200%); -webkit-backdrop-filter: blur(4px) saturate(200%); border: 1.5px solid var(--glass-border); color: var(--text-main); font-size: 0.85rem; font-weight: 600; cursor: pointer; box-shadow: var(--glass-shadow); transition: transform 0.3s var(--transition-elastic), background-color 0.3s var(--transition-elastic), box-shadow 0.3s var(--transition-elastic), color 0.6s ease, border-color 0.6s ease; position: relative; }
+        .dropdown-btn:hover { transform: translateY(-2px); background-color: rgba(255,255,255,0.4); box-shadow: 0 14px 28px rgba(0,0,0,0.04); }
+        .dropdown-btn::after { content: ""; position: absolute; right: 16px; top: 52%; transform: translateY(-50%); border: 4px solid transparent; border-top-color: var(--text-muted); transition: transform 0.3s var(--transition-elastic); }
         .custom-dropdown.active .dropdown-btn::after { transform: translateY(-50%) rotate(180deg); }
-        .dropdown-menu {
-            position: absolute; top: calc(100% + 8px); right: 0;
-            background-color: var(--glass-bg); backdrop-filter: blur(5px) saturate(200%); -webkit-backdrop-filter: blur(5px) saturate(200%);
-            border: 1.5px solid var(--glass-border); border-radius: var(--radius); box-shadow: var(--glass-shadow);
-            width: 130px; padding: 6px; opacity: 0; pointer-events: none;
-            transform: translateY(10px) scale(0.95);
-            transition: opacity 0.3s var(--transition-elastic), transform 0.3s var(--transition-elastic);
-        }
+        .dropdown-menu { position: absolute; top: calc(100% + 8px); right: 0; background-color: var(--glass-bg); backdrop-filter: blur(5px) saturate(200%); -webkit-backdrop-filter: blur(5px) saturate(200%); border: 1.5px solid var(--glass-border); border-radius: var(--radius); box-shadow: var(--glass-shadow); width: 130px; padding: 6px; opacity: 0; pointer-events: none; transform: translateY(10px) scale(0.95); transition: opacity 0.3s var(--transition-elastic), transform 0.3s var(--transition-elastic); }
         .custom-dropdown.active .dropdown-menu { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
-        .dropdown-item { padding: 8px 14px; font-size: 0.85rem; color: var(--text-main); border-radius: calc(var(--radius) - 6px); cursor: pointer; transition: background-color 0.2s, color 0.2s; text-align: left; }
+        .dropdown-item { padding: 8px 14px; font-size: 0.85rem; color: var(--text-main); border-radius: calc(var(--radius) - 6px); cursor: pointer; transition: background-color 0.2s; text-align: left; }
         .dropdown-item:hover { background-color: var(--glass-hover); }
         .dropdown-item.selected { font-weight: 700; background-color: var(--glass-hover); }
 
-        /* ============================================
-           主体容器
-           ============================================ */
         .container { width: 100%; max-width: 1100px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
 
-        /* ============================================
-           面板卡片
-           ============================================ */
         .panel {
             background: var(--card-bg); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
             border: 1px solid var(--glass-border); border-radius: 20px; padding: 28px;
@@ -318,34 +226,15 @@
         }
         .panel:nth-child(1) { animation-delay: 0.15s; }
         .panel:nth-child(2) { animation-delay: 0.25s; }
-        .panel::before {
-            content: ''; position: absolute; top: 0; left: 20px; right: 20px; height: 3px;
-            border-radius: 0 0 3px 3px;
-            background: linear-gradient(90deg, var(--accent-todo), var(--accent-idea));
-            opacity: 0.4; transition: opacity 0.4s ease, background 0.8s ease;
-        }
+        .panel::before { content: ''; position: absolute; top: 0; left: 20px; right: 20px; height: 3px; border-radius: 0 0 3px 3px; background: linear-gradient(90deg, var(--accent-todo), var(--accent-idea)); opacity: 0.4; transition: opacity 0.4s ease, background 0.8s ease; }
         .panel:hover::before { opacity: 0.7; }
 
-        @keyframes panelReveal { from { opacity: 0; transform: translateY(32px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
-
-        h2 {
-            font-size: 1.5rem; font-weight: 800; margin-bottom: 20px; padding-bottom: 16px;
-            border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;
-            letter-spacing: -0.3px; transition: color 0.6s ease, border-color 0.6s ease;
-        }
-        .todo-title { color: var(--accent-todo); transition: color 0.6s ease; }
-        .idea-title { color: var(--accent-idea); transition: color 0.6s ease; }
-
-        .panel-action-btn {
-            font-size: 0.8rem; color: var(--text-muted); background: none; border: none; cursor: pointer;
-            padding: 6px 12px; border-radius: 8px; font-weight: 500;
-            transition: all 0.3s var(--transition-elastic), color 0.6s ease; letter-spacing: 0.2px;
-        }
+        h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; letter-spacing: -0.3px; transition: color 0.6s ease, border-color 0.6s ease; }
+        .todo-title { color: var(--accent-todo); }
+        .idea-title { color: var(--accent-idea); }
+        .panel-action-btn { font-size: 0.8rem; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 6px 12px; border-radius: 8px; font-weight: 500; transition: all 0.3s var(--transition-elastic); letter-spacing: 0.2px; }
         .panel-action-btn:hover { color: var(--text-main); background: var(--glass-hover); transform: scale(1.04); }
 
-        /* ============================================
-           输入区域
-           ============================================ */
         .input-group { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; width: 100%; }
         input[type="text"], textarea.unified-input {
             flex: 1; height: 46px; padding: 0 18px; line-height: 44px;
@@ -353,9 +242,7 @@
             font-size: 0.92rem; outline: none; background: var(--input-bg); color: var(--text-main); resize: none;
             transition: all 0.35s var(--transition-elastic), background 0.6s ease, border-color 0.6s ease, color 0.6s ease;
         }
-        input[type="text"]:focus, textarea.unified-input:focus {
-            border-color: var(--accent-todo); transform: scale(1.015); box-shadow: 0 0 0 3px var(--accent-todo-glow);
-        }
+        input[type="text"]:focus, textarea.unified-input:focus { border-color: var(--accent-todo); transform: scale(1.015); box-shadow: 0 0 0 3px var(--accent-todo-glow); }
         textarea.unified-input { line-height: 1.5; padding: 12px 18px; height: 46px; overflow-y: hidden; }
         textarea.unified-input::-webkit-scrollbar { display: none; }
 
@@ -366,144 +253,60 @@
             transition: all 0.35s var(--transition-spring), background 0.8s ease, box-shadow 0.8s ease;
             letter-spacing: 0.3px; position: relative; overflow: hidden;
         }
-        button.main-btn::after {
-            content: ''; position: absolute; inset: 0;
-            background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), rgba(255,255,255,0.3) 0%, transparent 60%);
-            opacity: 0; transition: opacity 0.4s;
-        }
+        button.main-btn::after { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), rgba(255,255,255,0.3) 0%, transparent 60%); opacity: 0; transition: opacity 0.4s; }
         button.main-btn:active::after { opacity: 1; transition: opacity 0s; }
         button.main-btn:hover { transform: translateY(-2px) scale(1.03); }
         button.main-btn:active { transform: scale(0.95); transition-duration: 0.1s; }
-
-        .todo-btn {
-            background: linear-gradient(135deg, var(--accent-todo), color-mix(in srgb, var(--accent-todo) 80%, #fff));
-            box-shadow: var(--btn-shadow);
-        }
+        .todo-btn { background: linear-gradient(135deg, var(--accent-todo), color-mix(in srgb, var(--accent-todo) 80%, #fff)); box-shadow: var(--btn-shadow); }
         .todo-btn:hover { box-shadow: var(--btn-shadow-hover); }
-        .idea-btn {
-            background: linear-gradient(135deg, var(--accent-idea), color-mix(in srgb, var(--accent-idea) 80%, #fff));
-            box-shadow: var(--idea-btn-shadow);
-        }
+        .idea-btn { background: linear-gradient(135deg, var(--accent-idea), color-mix(in srgb, var(--accent-idea) 80%, #fff)); box-shadow: var(--idea-btn-shadow); }
         .idea-btn:hover { box-shadow: var(--idea-btn-shadow-hover); }
 
-        /* ============================================
-           列表容器
-           ============================================ */
-        .list-container {
-            flex: 1; overflow-y: auto; padding-right: 4px;
-            transition: opacity 0.25s var(--transition-smooth), transform 0.25s var(--transition-smooth);
-        }
+        .list-container { flex: 1; overflow-y: auto; padding-right: 4px; transition: opacity 0.25s var(--transition-smooth), transform 0.25s var(--transition-smooth); }
         .list-container.view-changing { opacity: 0; transform: scale(0.97) translateY(6px); }
         .list-container::-webkit-scrollbar { width: 5px; }
         .list-container::-webkit-scrollbar-track { background: transparent; }
         .list-container::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
         .list-container::-webkit-scrollbar-thumb:hover { background: var(--accent-todo); }
 
-        /* ============================================
-           待办卡片
-           ============================================ */
-        .item-card {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 14px 8px; border-bottom: 1px solid var(--border-color); background-color: transparent;
-            animation: cardEnter 0.45s var(--transition-spring) both;
-            transition: background-color 0.25s ease, border-color 0.6s ease;
-        }
+        .item-card { display: flex; align-items: center; justify-content: space-between; padding: 14px 8px; border-bottom: 1px solid var(--border-color); background-color: transparent; animation: cardEnter 0.45s var(--transition-spring) both; transition: background-color 0.25s ease, border-color 0.6s ease; }
         .item-card:hover { background: var(--card-hover-bg); }
         @keyframes cardEnter { from { opacity: 0; transform: translateY(16px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
-
         .todo-item { cursor: grab; }
         .todo-item:active { cursor: grabbing; }
-
-        .drag-placeholder {
-            height: 52px; background: var(--accent-todo-glow);
-            border: 2px dashed var(--accent-todo); border-radius: var(--radius-sm);
-            margin: 4px 0; opacity: 0.4; animation: placeholderPulse 1.2s ease-in-out infinite;
-            transition: background 0.6s ease, border-color 0.6s ease;
-        }
-        @keyframes placeholderPulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.55; } }
-
+        .drag-placeholder { height: 52px; background: var(--accent-todo-glow); border: 2px dashed var(--accent-todo); border-radius: var(--radius-sm); margin: 4px 0; opacity: 0.4; animation: placeholderPulse 1.2s ease-in-out infinite; }
+        @keyframes placeholderPulse { 0%,100% { opacity: 0.3; } 50% { opacity: 0.55; } }
         .todo-item.completed .todo-text, .todo-item.completed .todo-seq { text-decoration: line-through; color: var(--text-muted); opacity: 0.5; }
-
         .todo-content { display: flex; align-items: center; gap: 12px; flex: 1; pointer-events: none; }
         .todo-content input[type="checkbox"], .todo-content .todo-text-container { pointer-events: auto; }
         .todo-info-wrapper { display: flex; flex-direction: column; gap: 4px; flex: 1; }
         .todo-text-container { display: flex; gap: 6px; align-items: center; flex: 1; }
-
-        .inline-edit-input {
-            width: 100%; border: 1.5px solid var(--accent-todo); border-radius: 6px;
-            padding: 4px 10px; font-size: 0.92rem; color: var(--text-main); background: var(--input-bg);
-            outline: none; box-shadow: 0 0 0 3px var(--accent-todo-glow);
-        }
-
-        .todo-seq {
-            font-weight: 800; color: var(--accent-todo); opacity: 0.85; font-size: 0.85rem;
-            min-width: 24px; display: inline-flex; align-items: center; justify-content: center;
-            height: 22px; background: var(--accent-todo-glow); border-radius: 6px; user-select: none;
-            transition: color 0.6s ease, background 0.6s ease;
-        }
+        .inline-edit-input { width: 100%; border: 1.5px solid var(--accent-todo); border-radius: 6px; padding: 4px 10px; font-size: 0.92rem; color: var(--text-main); background: var(--input-bg); outline: none; box-shadow: 0 0 0 3px var(--accent-todo-glow); }
+        .todo-seq { font-weight: 800; color: var(--accent-todo); opacity: 0.85; font-size: 0.85rem; min-width: 24px; display: inline-flex; align-items: center; justify-content: center; height: 22px; background: var(--accent-todo-glow); border-radius: 6px; user-select: none; }
         .todo-text { cursor: text; transition: color 0.2s; }
         .todo-text:hover { color: var(--accent-todo); }
-
-        .timestamp { font-size: 0.72rem; color: var(--text-muted); user-select: none; letter-spacing: 0.3px; transition: color 0.6s ease; }
-
-        .todo-content input[type="checkbox"] {
-            -webkit-appearance: none; appearance: none;
-            width: 20px; height: 20px; border: 2px solid var(--border-color); border-radius: 6px;
-            cursor: pointer; position: relative; flex-shrink: 0;
-            transition: all 0.3s var(--transition-spring), background 0.6s ease, border-color 0.6s ease;
-        }
+        .timestamp { font-size: 0.72rem; color: var(--text-muted); user-select: none; letter-spacing: 0.3px; }
+        .todo-content input[type="checkbox"] { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border: 2px solid var(--border-color); border-radius: 6px; cursor: pointer; position: relative; flex-shrink: 0; transition: all 0.3s var(--transition-spring), background 0.6s ease, border-color 0.6s ease; }
         .todo-content input[type="checkbox"]:checked { background: var(--check-color); border-color: var(--check-color); }
-        .todo-content input[type="checkbox"]:checked::after {
-            content: ''; position: absolute; left: 5px; top: 2px;
-            width: 5px; height: 9px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
-        }
+        .todo-content input[type="checkbox"]:checked::after { content: ''; position: absolute; left: 5px; top: 2px; width: 5px; height: 9px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
         .todo-content input[type="checkbox"]:active { transform: scale(0.75); }
 
-        /* ============================================
-           灵感卡片
-           ============================================ */
-        .idea-card {
-            background: var(--input-bg); border-left: 3px solid var(--accent-idea);
-            padding: 16px 18px; margin-bottom: 12px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-            animation: cardEnter 0.45s var(--transition-spring) both;
-            transition: all 0.3s var(--transition-elastic), background 0.6s ease, border-color 0.6s ease;
-            position: relative;
-        }
-        .idea-card::before {
-            content: ''; position: absolute; left: 3px; top: 0; bottom: 0; width: 0;
-            background: var(--accent-idea-glow); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-            transition: width 0.4s var(--transition-elastic), background 0.6s ease;
-        }
+        .idea-card { background: var(--input-bg); border-left: 3px solid var(--accent-idea); padding: 16px 18px; margin-bottom: 12px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; animation: cardEnter 0.45s var(--transition-spring) both; transition: all 0.3s var(--transition-elastic), background 0.6s ease, border-color 0.6s ease; position: relative; }
+        .idea-card::before { content: ''; position: absolute; left: 3px; top: 0; bottom: 0; width: 0; background: var(--accent-idea-glow); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; transition: width 0.4s var(--transition-elastic), background 0.6s ease; }
         .idea-card:hover { transform: translateX(4px); box-shadow: -4px 0 20px var(--accent-idea-glow); }
         .idea-card:hover::before { width: 100%; left: 0; }
-
         .idea-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; user-select: none; position: relative; z-index: 1; }
         .idea-text { font-size: 0.92rem; line-height: 1.65; white-space: pre-wrap; word-break: break-all; cursor: text; position: relative; z-index: 1; }
+        .inline-edit-textarea { width: 100%; min-height: 60px; border: 1.5px solid var(--accent-idea); border-radius: 8px; padding: 8px 12px; font-size: 0.92rem; line-height: 1.65; color: var(--text-main); background: var(--card-bg-solid); outline: none; resize: vertical; box-shadow: 0 0 0 3px var(--accent-idea-glow); }
 
-        .inline-edit-textarea {
-            width: 100%; min-height: 60px; border: 1.5px solid var(--accent-idea); border-radius: 8px;
-            padding: 8px 12px; font-size: 0.92rem; line-height: 1.65; color: var(--text-main);
-            background: var(--card-bg-solid); outline: none; resize: vertical;
-            box-shadow: 0 0 0 3px var(--accent-idea-glow);
-        }
-
-        .action-text-btn {
-            background: none; border: none; color: var(--text-muted); cursor: pointer;
-            font-size: 0.78rem; padding: 4px 10px; border-radius: 6px; font-weight: 500;
-            transition: all 0.25s var(--transition-elastic), color 0.6s ease;
-        }
-        .action-text-btn:hover { color: #ef4444; background: rgba(239, 68, 68, 0.08); transform: scale(1.05); }
+        .action-text-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.78rem; padding: 4px 10px; border-radius: 6px; font-weight: 500; transition: all 0.25s var(--transition-elastic); }
+        .action-text-btn:hover { color: #ef4444; background: rgba(239,68,68,0.08); transform: scale(1.05); }
         .restore-btn:hover { color: var(--accent-todo); background: var(--accent-todo-glow); }
 
-        .empty-tip {
-            text-align: center; color: var(--text-muted); font-size: 0.88rem; margin-top: 48px; opacity: 0.6;
-            animation: emptyFadeIn 0.6s var(--transition-elastic) both;
-            display: flex; flex-direction: column; align-items: center; gap: 10px; transition: color 0.6s ease;
-        }
+        .empty-tip { text-align: center; color: var(--text-muted); font-size: 0.88rem; margin-top: 48px; opacity: 0.6; animation: emptyFadeIn 0.6s var(--transition-elastic) both; display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .empty-tip .empty-icon { font-size: 2.4rem; opacity: 0.4; }
         @keyframes emptyFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 0.6; transform: translateY(0); } }
 
-        /* 卡片交错动画延迟 */
         .list-container .item-card:nth-child(1) { animation-delay: 0s; }
         .list-container .item-card:nth-child(2) { animation-delay: 0.04s; }
         .list-container .item-card:nth-child(3) { animation-delay: 0.08s; }
@@ -520,15 +323,8 @@
         .list-container .idea-card:nth-child(4) { animation-delay: 0.15s; }
         .list-container .idea-card:nth-child(5) { animation-delay: 0.2s; }
 
-        .footer {
-            margin-top: 28px; text-align: center; font-size: 0.75rem; color: var(--text-muted);
-            opacity: 0.4; letter-spacing: 0.5px;
-            animation: titleFadeIn 0.8s 0.5s var(--transition-smooth) both; transition: color 0.6s ease;
-        }
+        .footer { margin-top: 28px; text-align: center; font-size: 0.75rem; color: var(--text-muted); opacity: 0.4; letter-spacing: 0.5px; }
 
-        /* ============================================
-           响应式
-           ============================================ */
         @media (max-width: 768px) {
             .container { grid-template-columns: 1fr; gap: 20px; }
             .auth-card { padding: 30px 22px; }
@@ -539,29 +335,25 @@
 </head>
 <body>
 
-    <!-- 四套主题专属动效背景 -->
     <div class="theme-deco deco-light" id="deco-light"></div>
     <div class="theme-deco deco-dark" id="deco-dark"></div>
     <div class="theme-deco deco-forest" id="deco-forest"></div>
     <div class="theme-deco deco-pink" id="deco-pink"></div>
 
-    <!-- ==================== 登录页面 ==================== -->
+    <!-- ==================== 登录页 ==================== -->
     <div class="auth-shell" id="auth-shell">
         <div class="auth-card">
             <div class="auth-eyebrow">随心工作台</div>
             <h1 id="auth-title">邮箱登录</h1>
-            <p class="auth-subtitle" id="auth-subtitle">先用邮箱进入你的工作台。风格和当前页面保持一致，操作也尽量轻一点。</p>
-            <div class="auth-form">
+            <p class="auth-subtitle" id="auth-subtitle">输入邮箱地址，我们会发送一封登录链接到你的收件箱。</p>
+            <div class="auth-form" id="auth-form">
                 <input type="email" id="auth-email" placeholder="输入邮箱地址">
-                <input type="password" id="auth-password" placeholder="输入密码" onkeydown="if(event.key==='Enter') handleAuthSubmit()">
-                <button class="main-btn auth-submit-btn" id="auth-submit-btn" onclick="handleAuthSubmit()">立即登录</button>
+                <!-- 密码框：仅注册模式显示 -->
+                <input type="password" id="auth-password" class="hidden" placeholder="设置密码（至少 6 位）">
+                <button class="main-btn auth-submit-btn" id="auth-submit-btn" onclick="handleAuthSubmit()">发送登录链接</button>
             </div>
             <div class="auth-footer">
                 <button class="auth-switch-btn" id="auth-switch-btn" onclick="toggleAuthMode()">没有账号？<strong>去注册</strong></button>
-                <button class="ghost-btn" id="auth-magic-btn" onclick="sendMagicLink()">发送邮箱登录链接</button>
-            </div>
-            <div class="auth-link-row">
-                <button class="ghost-btn" id="auth-resend-btn" onclick="resendConfirmation()">重新发送确认邮件</button>
             </div>
             <div class="auth-message" id="auth-message"></div>
         </div>
@@ -618,11 +410,7 @@
     </div>
 
     <script>
-        /* ============================================
-           核心状态
-           ============================================ */
-        let todos = [];
-        let ideas = [];
+        let todos = [], ideas = [];
         let todoTrash = JSON.parse(localStorage.getItem('my_todo_trash')) || [];
         let ideaTrash = JSON.parse(localStorage.getItem('my_idea_trash')) || [];
         let currentTheme = localStorage.getItem('my_theme') || 'light';
@@ -630,17 +418,11 @@
         let isAuthLoginMode = true;
 
         const themeNamesMap = { 'light': '简约浅灰', 'cute-pink': '温柔甜妹', 'dark': '优雅深色', 'forest': '复古森林' };
-        let isTodoTrashView = false;
-        let isIdeaTrashView = false;
-        let draggedTodoId = null;
-        let isEditingMode = false;
-
+        let isTodoTrashView = false, isIdeaTrashView = false;
+        let draggedTodoId = null, isEditingMode = false;
         const dragPlaceholder = document.createElement('div');
         dragPlaceholder.className = 'drag-placeholder';
 
-        /* ============================================
-           初始化
-           ============================================ */
         window.onload = async function() {
             initTheme(currentTheme);
             setupDragAndDrop();
@@ -650,6 +432,7 @@
             syncAuthCopy();
 
             await handleAuthCallback();
+
             const { data: { session } } = await supabaseClient.auth.getSession();
             handleAuthState(session ? session.user : null);
 
@@ -659,145 +442,89 @@
         };
 
         function setupGlobalEvents() {
-            document.addEventListener('click', function(event) {
-                const dropdown = document.getElementById('theme-dropdown');
-                if (dropdown && !dropdown.contains(event.target)) {
-                    dropdown.classList.remove('active');
-                }
+            document.addEventListener('click', function(e) {
+                const dd = document.getElementById('theme-dropdown');
+                if (dd && !dd.contains(e.target)) dd.classList.remove('active');
             });
-            const ideaInput = document.getElementById('idea-input');
-            if (ideaInput) {
-                ideaInput.addEventListener('keydown', function(e) {
-                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); addIdea(); }
-                });
-            }
+            document.getElementById('idea-input').addEventListener('keydown', function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); addIdea(); }
+            });
         }
 
-        /* ============================================
-           装饰粒子
-           ============================================ */
+        // ========== 装饰 ==========
         function initDecorations() {
             const lightBox = document.getElementById('deco-light');
-            for (let i = 0; i < 24; i++) {
-                const p = document.createElement('div');
-                p.className = 'dust-mote';
-                p.style.left = Math.random() * 100 + '%';
-                p.style.top = (10 + Math.random() * 85) + '%';
-                const s = 3 + Math.random() * 5;
-                p.style.width = p.style.height = s + 'px';
-                const hue = Math.random() > 0.5 ? '210, 70%, 62%' : '28, 80%, 62%';
-                const peakA = 0.45 + Math.random() * 0.25;
-                const midA = 0.1 + Math.random() * 0.12;
-                p.style.background = `radial-gradient(circle, hsla(${hue}, ${peakA}), hsla(${hue}, 0.05))`;
-                p.style.setProperty('--peak', peakA);
-                p.style.setProperty('--mid', midA);
-                p.style.setProperty('--dx', (Math.random() * 60 - 30) + 'px');
-                p.style.setProperty('--dy', -(30 + Math.random() * 60) + 'px');
-                p.style.animationDuration = (10 + Math.random() * 14) + 's';
-                p.style.animationDelay = (Math.random() * 12) + 's';
-                lightBox.appendChild(p);
-            }
+            for (let i = 0; i < 24; i++) { const p = document.createElement('div'); p.className = 'dust-mote'; p.style.left = Math.random()*100+'%'; p.style.top = (10+Math.random()*85)+'%'; const s = 3+Math.random()*5; p.style.width = p.style.height = s+'px'; const hue = Math.random()>0.5?'210, 70%, 62%':'28, 80%, 62%'; const peakA = 0.45+Math.random()*0.25, midA = 0.1+Math.random()*0.12; p.style.background = `radial-gradient(circle, hsla(${hue}, ${peakA}), hsla(${hue}, 0.05))`; p.style.setProperty('--peak',peakA); p.style.setProperty('--mid',midA); p.style.setProperty('--dx',(Math.random()*60-30)+'px'); p.style.setProperty('--dy',-(30+Math.random()*60)+'px'); p.style.animationDuration=(10+Math.random()*14)+'s'; p.style.animationDelay=(Math.random()*12)+'s'; lightBox.appendChild(p); }
             const darkBox = document.getElementById('deco-dark');
-            for (let i = 0; i < 60; i++) {
-                const s = document.createElement('div');
-                s.className = 'star';
-                s.style.left = Math.random() * 100 + '%';
-                s.style.top = Math.random() * 100 + '%';
-                s.style.setProperty('--dur', (2 + Math.random() * 4) + 's');
-                s.style.setProperty('--max-opacity', (0.3 + Math.random() * 0.5));
-                s.style.animationDelay = (Math.random() * 4) + 's';
-                s.style.width = s.style.height = (1 + Math.random() * 2) + 'px';
-                darkBox.appendChild(s);
-            }
+            for (let i=0;i<60;i++){const s=document.createElement('div');s.className='star';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.setProperty('--dur',(2+Math.random()*4)+'s');s.style.setProperty('--max-opacity',(0.3+Math.random()*0.5));s.style.animationDelay=(Math.random()*4)+'s';s.style.width=s.style.height=(1+Math.random()*2)+'px';darkBox.appendChild(s);}
             const forestBox = document.getElementById('deco-forest');
-            for (let i = 0; i < 22; i++) {
-                const f = document.createElement('div');
-                f.className = 'firefly';
-                f.style.left = Math.random() * 100 + '%';
-                f.style.top = Math.random() * 100 + '%';
-                const s = 2 + Math.random() * 2.5;
-                f.style.width = f.style.height = s + 'px';
-                f.style.setProperty('--dx', (Math.random() * 80 - 40) + 'px');
-                f.style.setProperty('--dy', (Math.random() * 80 - 40) + 'px');
-                f.style.animationDuration = (7 + Math.random() * 10) + 's';
-                f.style.animationDelay = (Math.random() * 10) + 's';
-                forestBox.appendChild(f);
-            }
+            for (let i=0;i<22;i++){const f=document.createElement('div');f.className='firefly';f.style.left=Math.random()*100+'%';f.style.top=Math.random()*100+'%';const s=2+Math.random()*2.5;f.style.width=f.style.height=s+'px';f.style.setProperty('--dx',(Math.random()*80-40)+'px');f.style.setProperty('--dy',(Math.random()*80-40)+'px');f.style.animationDuration=(7+Math.random()*10)+'s';f.style.animationDelay=(Math.random()*10)+'s';forestBox.appendChild(f);}
             const pinkBox = document.getElementById('deco-pink');
-            for (let i = 0; i < 32; i++) {
-                const sp = document.createElement('div');
-                sp.className = 'sparkle';
-                sp.style.left = Math.random() * 100 + '%';
-                sp.style.top = Math.random() * 100 + '%';
-                const s = 1.5 + Math.random() * 3;
-                sp.style.width = sp.style.height = s + 'px';
-                sp.style.setProperty('--sdur', (3 + Math.random() * 6) + 's');
-                sp.style.animationDelay = (Math.random() * 8) + 's';
-                pinkBox.appendChild(sp);
-            }
+            for (let i=0;i<32;i++){const sp=document.createElement('div');sp.className='sparkle';sp.style.left=Math.random()*100+'%';sp.style.top=Math.random()*100+'%';const s=1.5+Math.random()*3;sp.style.width=sp.style.height=s+'px';sp.style.setProperty('--sdur',(3+Math.random()*6)+'s');sp.style.animationDelay=(Math.random()*8)+'s';pinkBox.appendChild(sp);}
         }
 
         function setupRippleEffect() {
             document.querySelectorAll('button.main-btn').forEach(btn => {
                 btn.addEventListener('mouseenter', function(e) {
-                    const rect = this.getBoundingClientRect();
-                    this.style.setProperty('--ripple-x', ((e.clientX - rect.left) / rect.width * 100) + '%');
-                    this.style.setProperty('--ripple-y', ((e.clientY - rect.top) / rect.height * 100) + '%');
+                    const r = this.getBoundingClientRect();
+                    this.style.setProperty('--ripple-x', ((e.clientX-r.left)/r.width*100)+'%');
+                    this.style.setProperty('--ripple-y', ((e.clientY-r.top)/r.height*100)+'%');
                 });
             });
         }
 
-        /* ============================================
-           认证逻辑
-           ============================================ */
+        // ========== 认证状态 ==========
         function handleAuthState(user) {
             currentUser = user;
-            const authShell = document.getElementById('auth-shell');
-            const appShell = document.getElementById('app-shell');
-            const userEmail = document.getElementById('user-email');
-
             if (user) {
-                authShell.classList.add('hidden');
-                appShell.classList.remove('hidden');
-                userEmail.innerText = user.email || '未命名邮箱';
+                document.getElementById('auth-shell').classList.add('hidden');
+                document.getElementById('app-shell').classList.remove('hidden');
+                document.getElementById('user-email').innerText = user.email || '未命名邮箱';
                 setAuthMessage('');
                 loadDataFromSupabase();
             } else {
-                authShell.classList.remove('hidden');
-                appShell.classList.add('hidden');
-                userEmail.innerText = '-';
+                document.getElementById('auth-shell').classList.remove('hidden');
+                document.getElementById('app-shell').classList.add('hidden');
+                document.getElementById('user-email').innerText = '-';
                 todos = []; ideas = [];
                 renderTodos(); renderIdeas();
             }
         }
 
+        // ========== 认证 UI 切换 ==========
         function syncAuthCopy() {
-            document.getElementById('auth-title').innerText = isAuthLoginMode ? '邮箱登录' : '邮箱注册';
-            document.getElementById('auth-subtitle').innerText = isAuthLoginMode
-                ? '先用邮箱进入你的工作台。风格和当前页面保持一致，操作也尽量轻一点。'
-                : '注册一个邮箱账号后，就能继续使用这套简洁的随心工作台。';
-            document.getElementById('auth-submit-btn').innerText = isAuthLoginMode ? '立即登录' : '创建账号';
-            document.getElementById('auth-switch-btn').innerHTML = isAuthLoginMode
-                ? '没有账号？<strong>去注册</strong>'
-                : '已有账号？<strong>去登录</strong>';
-            document.getElementById('auth-magic-btn').style.display = isAuthLoginMode ? 'inline-block' : 'none';
-            document.getElementById('auth-resend-btn').style.display = isAuthLoginMode ? 'none' : 'inline-block';
+            const pwdInput = document.getElementById('auth-password');
+            const titleEl = document.getElementById('auth-title');
+            const subEl = document.getElementById('auth-subtitle');
+            const btnEl = document.getElementById('auth-submit-btn');
+            const switchEl = document.getElementById('auth-switch-btn');
+
+            if (isAuthLoginMode) {
+                titleEl.innerText = '邮箱登录';
+                subEl.innerText = '输入邮箱地址，我们会发送一封登录链接到你的收件箱。';
+                btnEl.innerText = '发送登录链接';
+                switchEl.innerHTML = '没有账号？<strong>去注册</strong>';
+                pwdInput.classList.add('hidden');
+                pwdInput.value = '';
+            } else {
+                titleEl.innerText = '邮箱注册';
+                subEl.innerText = '设置邮箱和密码来创建账号，注册后需确认邮件方可使用。';
+                btnEl.innerText = '创建账号';
+                switchEl.innerHTML = '已有账号？<strong>去登录</strong>';
+                pwdInput.classList.remove('hidden');
+            }
             setAuthMessage('');
         }
 
-        function toggleAuthMode() { isAuthLoginMode = !isAuthLoginMode; syncAuthCopy(); }
-
-        function setAuthMessage(message, type = '') {
-            const el = document.getElementById('auth-message');
-            el.className = type ? `auth-message ${type}` : 'auth-message';
-            el.innerText = message;
+        function toggleAuthMode() {
+            isAuthLoginMode = !isAuthLoginMode;
+            syncAuthCopy();
         }
 
-        function getAuthFormValue() {
-            return {
-                email: document.getElementById('auth-email').value.trim(),
-                password: document.getElementById('auth-password').value
-            };
+        function setAuthMessage(msg, type = '') {
+            const el = document.getElementById('auth-message');
+            el.className = type ? `auth-message ${type}` : 'auth-message';
+            el.innerText = msg;
         }
 
         function getRedirectUrl() {
@@ -807,408 +534,150 @@
             return window.location.href.split('?')[0].split('#')[0];
         }
 
+        // ========== 邮箱确认/登录链接回调 ==========
+        // 用户从邮件点击链接后，URL 会带上 ?code=... 或 ?token_hash=...
         async function handleAuthCallback() {
             const url = new URL(window.location.href);
             const code = url.searchParams.get('code');
             const tokenHash = url.searchParams.get('token_hash');
             const authType = url.searchParams.get('type');
-            const errorDescription = url.searchParams.get('error_description');
+            const errorDesc = url.searchParams.get('error_description');
 
-            if (errorDescription) { setAuthMessage(decodeURIComponent(errorDescription), 'error'); return; }
+            if (errorDesc) { setAuthMessage(decodeURIComponent(errorDesc), 'error'); return; }
             if (!code && !tokenHash) return;
 
             let authError = null;
             if (code) {
-                const result = await supabaseClient.auth.exchangeCodeForSession(code);
-                authError = result.error;
+                const r = await supabaseClient.auth.exchangeCodeForSession(code);
+                authError = r.error;
             } else {
-                const result = await supabaseClient.auth.verifyOtp({ token_hash: tokenHash, type: authType || 'email' });
-                authError = result.error;
+                const r = await supabaseClient.auth.verifyOtp({ token_hash: tokenHash, type: authType || 'email' });
+                authError = r.error;
             }
 
-            if (authError) { setAuthMessage(authError.message || '邮箱确认失败，请重试。', 'error'); return; }
+            if (authError) { setAuthMessage(authError.message || '确认失败，请重试。', 'error'); return; }
 
+            // 清理 URL 参数
             url.searchParams.delete('code'); url.searchParams.delete('token_hash');
             url.searchParams.delete('state'); url.searchParams.delete('type');
             window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
-            setAuthMessage('邮箱已确认，正在进入工作台...', 'success');
+            setAuthMessage('已确认，欢迎回来！', 'success');
         }
 
+        // ========== 核心提交 ==========
         async function handleAuthSubmit() {
-            const { email, password } = getAuthFormValue();
-            if (!email || !password) { setAuthMessage('请先输入邮箱和密码。', 'error'); return; }
-            setAuthMessage(isAuthLoginMode ? '正在登录...' : '正在创建账号...');
+            const email = document.getElementById('auth-email').value.trim();
 
             if (isAuthLoginMode) {
-                const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                if (error) { setAuthMessage(error.message || '登录失败，请稍后再试。', 'error'); return; }
-                setAuthMessage('登录成功。', 'success');
+                // ── 第一层：邮箱登录（发链接） ──
+                if (!email) { setAuthMessage('请输入邮箱地址。', 'error'); return; }
+
+                setAuthMessage('正在发送登录链接...');
+                const { error } = await supabaseClient.auth.signInWithOtp({
+                    email,
+                    options: { emailRedirectTo: getRedirectUrl() }
+                });
+                if (error) { setAuthMessage(error.message || '发送失败，请稍后再试。', 'error'); return; }
+                setAuthMessage('登录链接已发送，请打开邮箱点击链接即可进入工作台。', 'success');
+
             } else {
-                const { error } = await supabaseClient.auth.signUp({ email, password, options: { emailRedirectTo: getRedirectUrl() } });
+                // ── 第二层：注册（邮箱 + 设密码） ──
+                const password = document.getElementById('auth-password').value;
+                if (!email) { setAuthMessage('请输入邮箱地址。', 'error'); return; }
+                if (!password || password.length < 6) { setAuthMessage('密码至少需要 6 位。', 'error'); return; }
+
+                setAuthMessage('正在创建账号...');
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email,
+                    password,
+                    options: { emailRedirectTo: getRedirectUrl() }
+                });
                 if (error) { setAuthMessage(error.message || '注册失败，请稍后再试。', 'error'); return; }
-                setAuthMessage('已发送确认邮件，请前往邮箱完成确认。确认后会自动回到这里。', 'success');
+
+                if (data.session) {
+                    setAuthMessage('注册成功，已自动登录！', 'success');
+                } else {
+                    setAuthMessage('注册成功！请前往邮箱点击确认链接，完成注册后即可用密码登录。', 'success');
+                }
             }
-        }
-
-        async function sendMagicLink() {
-            const { email } = getAuthFormValue();
-            if (!email) { setAuthMessage('先输入邮箱，再发送登录链接。', 'error'); return; }
-            setAuthMessage('正在发送登录链接...');
-            const { error } = await supabaseClient.auth.signInWithOtp({ email, options: { emailRedirectTo: getRedirectUrl() } });
-            if (error) { setAuthMessage(error.message || '发送失败，请稍后再试。', 'error'); return; }
-            setAuthMessage('已发送登录链接，请打开邮箱点击链接后自动返回。', 'success');
-        }
-
-        async function resendConfirmation() {
-            const { email } = getAuthFormValue();
-            if (!email) { setAuthMessage('先输入邮箱，再重新发送确认邮件。', 'error'); return; }
-            setAuthMessage('正在重新发送确认邮件...');
-            const { error } = await supabaseClient.auth.resend({ type: 'signup', email, options: { emailRedirectTo: getRedirectUrl() } });
-            if (error) { setAuthMessage(error.message || '发送失败，请稍后再试。', 'error'); return; }
-            setAuthMessage('已重新发送确认邮件，请检查邮箱。', 'success');
         }
 
         async function signOut() {
             const { error } = await supabaseClient.auth.signOut();
-            if (error) { setAuthMessage(error.message || '退出失败，请稍后再试。', 'error'); return; }
+            if (error) { setAuthMessage(error.message || '退出失败。', 'error'); return; }
             document.getElementById('auth-password').value = '';
             setAuthMessage('你已退出登录。', 'success');
         }
 
-        /* ============================================
-           Supabase 数据操作
-           ============================================ */
+        // ========== Supabase 数据 ==========
         async function loadDataFromSupabase() {
             if (!currentUser) return;
-            const { data: todoData } = await supabaseClient.from('todos')
-                .select('*')
-                .order('is_completed', { ascending: true })
-                .order('order_index', { ascending: true });
-            const { data: ideaData } = await supabaseClient.from('ideas')
-                .select('*')
-                .order('created_at', { ascending: false });
+            const { data: todoData } = await supabaseClient.from('todos').select('*').order('is_completed', { ascending: true }).order('order_index', { ascending: true });
+            const { data: ideaData } = await supabaseClient.from('ideas').select('*').order('created_at', { ascending: false });
             if (todoData) todos = todoData;
             if (ideaData) ideas = ideaData;
-            renderTodos();
-            renderIdeas();
+            renderTodos(); renderIdeas();
         }
 
-        async function addTodo() {
-            const input = document.getElementById('todo-input');
-            const text = input.value.trim();
-            if (!text) return;
-            await supabaseClient.from('todos').insert([{ text: text, is_completed: false, order_index: todos.length }]);
-            input.value = '';
-            loadDataFromSupabase();
-        }
+        async function addTodo() { const inp = document.getElementById('todo-input'); const text = inp.value.trim(); if (!text) return; await supabaseClient.from('todos').insert([{ text, is_completed: false, order_index: todos.length }]); inp.value = ''; loadDataFromSupabase(); }
+        async function toggleTodo(id, cur) { await supabaseClient.from('todos').update({ is_completed: !cur }).eq('id', id); loadDataFromSupabase(); }
+        async function trashTodo(id) { const t = todos.find(x => x.id === id); if (t) { todoTrash.push({ id: t.id, text: t.text, time: formatTime(t.created_at), is_completed: t.is_completed }); localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash)); await supabaseClient.from('todos').delete().eq('id', id); loadDataFromSupabase(); } }
+        async function restoreTodo(id) { const t = todoTrash.find(x => x.id === id); if (t) { await supabaseClient.from('todos').insert([{ text: t.text, is_completed: t.is_completed, order_index: todos.length }]); todoTrash = todoTrash.filter(x => x.id !== id); localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash)); loadDataFromSupabase(); } }
+        function burnTodo(id) { todoTrash = todoTrash.filter(t => t.id !== id); localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash)); renderTodos(); }
+        async function addIdea() { const inp = document.getElementById('idea-input'); const text = inp.value.trim(); if (!text) return; await supabaseClient.from('ideas').insert([{ text }]); inp.value = ''; loadDataFromSupabase(); }
+        async function trashIdea(id) { const t = ideas.find(x => x.id === id); if (t) { ideaTrash.push({ id: t.id, text: t.text, time: formatTime(t.created_at) }); localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash)); await supabaseClient.from('ideas').delete().eq('id', id); loadDataFromSupabase(); } }
+        async function restoreIdea(id) { const t = ideaTrash.find(x => x.id === id); if (t) { await supabaseClient.from('ideas').insert([{ text: t.text }]); ideaTrash = ideaTrash.filter(x => x.id !== id); localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash)); loadDataFromSupabase(); } }
+        function burnIdea(id) { ideaTrash = ideaTrash.filter(x => x.id !== id); localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash)); renderIdeas(); }
 
-        async function toggleTodo(id, currentStatus) {
-            await supabaseClient.from('todos').update({ is_completed: !currentStatus }).eq('id', id);
-            loadDataFromSupabase();
-        }
-
-        async function trashTodo(id) {
-            const target = todos.find(t => t.id === id);
-            if (target) {
-                todoTrash.push({ id: target.id, text: target.text, time: formatTime(target.created_at), is_completed: target.is_completed });
-                localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
-                await supabaseClient.from('todos').delete().eq('id', id);
-                loadDataFromSupabase();
-            }
-        }
-
-        async function restoreTodo(id) {
-            const target = todoTrash.find(t => t.id === id);
-            if (target) {
-                await supabaseClient.from('todos').insert([{ text: target.text, is_completed: target.is_completed, order_index: todos.length }]);
-                todoTrash = todoTrash.filter(t => t.id !== id);
-                localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
-                loadDataFromSupabase();
-            }
-        }
-
-        function burnTodo(id) {
-            todoTrash = todoTrash.filter(t => t.id !== id);
-            localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
-            renderTodos();
-        }
-
-        async function addIdea() {
-            const input = document.getElementById('idea-input');
-            const text = input.value.trim();
-            if (!text) return;
-            await supabaseClient.from('ideas').insert([{ text: text }]);
-            input.value = '';
-            loadDataFromSupabase();
-        }
-
-        async function trashIdea(id) {
-            const target = ideas.find(i => i.id === id);
-            if (target) {
-                ideaTrash.push({ id: target.id, text: target.text, time: formatTime(target.created_at) });
-                localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
-                await supabaseClient.from('ideas').delete().eq('id', id);
-                loadDataFromSupabase();
-            }
-        }
-
-        async function restoreIdea(id) {
-            const target = ideaTrash.find(i => i.id === id);
-            if (target) {
-                await supabaseClient.from('ideas').insert([{ text: target.text }]);
-                ideaTrash = ideaTrash.filter(i => i.id !== id);
-                localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
-                loadDataFromSupabase();
-            }
-        }
-
-        function burnIdea(id) {
-            ideaTrash = ideaTrash.filter(i => i.id !== id);
-            localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
-            renderIdeas();
-        }
-
-        /* ============================================
-           拖拽排序（更新 Supabase order_index）
-           ============================================ */
+        // ========== 拖拽 ==========
         function setupDragAndDrop() {
             const listEl = document.getElementById('todo-list');
-
-            listEl.addEventListener('dragstart', (e) => {
-                const card = e.target.closest('.todo-item');
-                if (!card || isTodoTrashView || isEditingMode) { e.preventDefault(); return; }
-                draggedTodoId = parseInt(card.dataset.id);
-                setTimeout(() => { card.style.display = 'none'; card.parentNode.insertBefore(dragPlaceholder, card); }, 0);
-            });
-
-            listEl.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                const targetCard = e.target.closest('.todo-item');
-                if (targetCard && targetCard.dataset.id != draggedTodoId && !isTodoTrashView) {
-                    const rect = targetCard.getBoundingClientRect();
-                    const midY = rect.top + rect.height / 2;
-                    if (e.clientY < midY) targetCard.parentNode.insertBefore(dragPlaceholder, targetCard);
-                    else targetCard.parentNode.insertBefore(dragPlaceholder, targetCard.nextSibling);
-                }
-            });
-
-            listEl.addEventListener('drop', (e) => {
-                e.preventDefault();
-                if (isTodoTrashView || !draggedTodoId) return;
-                const draggedElement = document.querySelector(`[data-id="${draggedTodoId}"]`);
-                if (draggedElement && dragPlaceholder.parentNode) dragPlaceholder.parentNode.insertBefore(draggedElement, dragPlaceholder);
-            });
-
-            listEl.addEventListener('dragend', async () => {
-                if (dragPlaceholder.parentNode) dragPlaceholder.parentNode.removeChild(dragPlaceholder);
-                const draggedElement = document.querySelector(`[data-id="${draggedTodoId}"]`);
-                if (draggedElement) draggedElement.style.display = '';
-
-                const updates = [];
-                document.querySelectorAll('#todo-list .todo-item').forEach((el, index) => {
-                    const id = parseInt(el.dataset.id);
-                    updates.push(supabaseClient.from('todos').update({ order_index: index }).eq('id', id));
-                });
-                await Promise.all(updates);
-                loadDataFromSupabase();
-                draggedTodoId = null;
-            });
+            listEl.addEventListener('dragstart', (e) => { const c = e.target.closest('.todo-item'); if (!c || isTodoTrashView || isEditingMode) { e.preventDefault(); return; } draggedTodoId = parseInt(c.dataset.id); setTimeout(() => { c.style.display = 'none'; c.parentNode.insertBefore(dragPlaceholder, c); }, 0); });
+            listEl.addEventListener('dragover', (e) => { e.preventDefault(); const t = e.target.closest('.todo-item'); if (t && t.dataset.id != draggedTodoId && !isTodoTrashView) { const r = t.getBoundingClientRect(); if (e.clientY < r.top + r.height / 2) t.parentNode.insertBefore(dragPlaceholder, t); else t.parentNode.insertBefore(dragPlaceholder, t.nextSibling); } });
+            listEl.addEventListener('drop', (e) => { e.preventDefault(); if (isTodoTrashView || !draggedTodoId) return; const el = document.querySelector(`[data-id="${draggedTodoId}"]`); if (el && dragPlaceholder.parentNode) dragPlaceholder.parentNode.insertBefore(el, dragPlaceholder); });
+            listEl.addEventListener('dragend', async () => { if (dragPlaceholder.parentNode) dragPlaceholder.parentNode.removeChild(dragPlaceholder); const el = document.querySelector(`[data-id="${draggedTodoId}"]`); if (el) el.style.display = ''; const ups = []; document.querySelectorAll('#todo-list .todo-item').forEach((el, i) => { ups.push(supabaseClient.from('todos').update({ order_index: i }).eq('id', parseInt(el.dataset.id))); }); await Promise.all(ups); loadDataFromSupabase(); draggedTodoId = null; });
         }
 
-        /* ============================================
-           就地双击编辑（对接 Supabase）
-           ============================================ */
-        function startEditTodo(id, textSpan) {
-            if (isTodoTrashView) return;
-            isEditingMode = true;
-            const card = textSpan.closest('.todo-item');
-            if (card) card.setAttribute('draggable', 'false');
+        // ========== 就地编辑 ==========
+        function startEditTodo(id, span) { if (isTodoTrashView) return; isEditingMode = true; const c = span.closest('.todo-item'); if (c) c.setAttribute('draggable', 'false'); const cur = span.innerText; const inp = document.createElement('input'); inp.type = 'text'; inp.className = 'inline-edit-input'; inp.value = cur; span.replaceWith(inp); inp.focus(); inp.select(); const done = async () => { if (!isEditingMode) return; const v = inp.value.trim(); if (v && v !== cur) await supabaseClient.from('todos').update({ text: v }).eq('id', id); isEditingMode = false; loadDataFromSupabase(); }; inp.addEventListener('blur', done); inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') done(); if (e.key === 'Escape') { isEditingMode = false; renderTodos(); } }); }
+        function startEditIdea(id, div) { if (isIdeaTrashView) return; isEditingMode = true; const cur = div.innerText; const ta = document.createElement('textarea'); ta.className = 'inline-edit-textarea'; ta.value = cur; div.replaceWith(ta); ta.focus(); const done = async () => { if (!isEditingMode) return; const v = ta.value.trim(); if (v && v !== cur) await supabaseClient.from('ideas').update({ text: v }).eq('id', id); isEditingMode = false; loadDataFromSupabase(); }; ta.addEventListener('blur', done); ta.addEventListener('keydown', (e) => { if ((e.ctrlKey||e.metaKey)&&e.key==='Enter') done(); if (e.key==='Escape') { isEditingMode = false; renderIdeas(); } }); }
 
-            const currentText = textSpan.innerText;
-            const input = document.createElement('input');
-            input.type = 'text'; input.className = 'inline-edit-input'; input.value = currentText;
-            textSpan.replaceWith(input); input.focus(); input.select();
+        // ========== UI ==========
+        function toggleDropdown(e) { e.stopPropagation(); document.getElementById('theme-dropdown').classList.toggle('active'); }
+        function initTheme(n) { document.documentElement.setAttribute('data-theme', n); document.getElementById('dropdown-title').innerText = themeNamesMap[n]||'简约浅灰'; updateDropdownHighlight(n); }
+        function selectTheme(n, t) { document.documentElement.setAttribute('data-theme', n); document.getElementById('dropdown-title').innerText = t; localStorage.setItem('my_theme', n); updateDropdownHighlight(n); }
+        function updateDropdownHighlight(n) { document.querySelectorAll('.dropdown-item').forEach(i => { i.classList.toggle('selected', i.getAttribute('data-value')===n); }); }
+        function formatTime(ts) { if (!ts) return '未知'; const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+        function triggerViewTransition(id, fn) { const c = document.getElementById(id); c.classList.add('view-changing'); setTimeout(() => { fn(); c.classList.remove('view-changing'); }, 200); }
 
-            const finishEdit = async () => {
-                if (!isEditingMode) return;
-                const updatedText = input.value.trim();
-                if (updatedText && updatedText !== currentText) {
-                    await supabaseClient.from('todos').update({ text: updatedText }).eq('id', id);
-                }
-                isEditingMode = false;
-                loadDataFromSupabase();
-            };
-
-            input.addEventListener('blur', finishEdit);
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') finishEdit();
-                if (e.key === 'Escape') { isEditingMode = false; renderTodos(); }
-            });
-        }
-
-        function startEditIdea(id, textDiv) {
-            if (isIdeaTrashView) return;
-            isEditingMode = true;
-            const currentText = textDiv.innerText;
-            const textarea = document.createElement('textarea');
-            textarea.className = 'inline-edit-textarea'; textarea.value = currentText;
-            textDiv.replaceWith(textarea); textarea.focus();
-
-            const finishEdit = async () => {
-                if (!isEditingMode) return;
-                const updatedText = textarea.value.trim();
-                if (updatedText && updatedText !== currentText) {
-                    await supabaseClient.from('ideas').update({ text: updatedText }).eq('id', id);
-                }
-                isEditingMode = false;
-                loadDataFromSupabase();
-            };
-
-            textarea.addEventListener('blur', finishEdit);
-            textarea.addEventListener('keydown', (e) => {
-                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') finishEdit();
-                if (e.key === 'Escape') { isEditingMode = false; renderIdeas(); }
-            });
-        }
-
-        /* ============================================
-           UI 控制
-           ============================================ */
-        function toggleDropdown(event) { event.stopPropagation(); document.getElementById('theme-dropdown').classList.toggle('active'); }
-        function initTheme(themeName) { document.documentElement.setAttribute('data-theme', themeName); document.getElementById('dropdown-title').innerText = themeNamesMap[themeName] || '简约浅灰'; updateDropdownHighlight(themeName); }
-        function selectTheme(themeName, themeText) { document.documentElement.setAttribute('data-theme', themeName); document.getElementById('dropdown-title').innerText = themeText; localStorage.setItem('my_theme', themeName); updateDropdownHighlight(themeName); }
-        function updateDropdownHighlight(themeName) { document.querySelectorAll('.dropdown-item').forEach(item => { item.classList.toggle('selected', item.getAttribute('data-value') === themeName); }); }
-
-        function formatTime(timestampString) {
-            if (!timestampString) return '未知';
-            const date = new Date(timestampString);
-            return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-        }
-
-        function triggerViewTransition(containerId, renderFn) {
-            const container = document.getElementById(containerId);
-            container.classList.add('view-changing');
-            setTimeout(() => { renderFn(); container.classList.remove('view-changing'); }, 200);
-        }
-
-        /* ============================================
-           渲染：待办
-           ============================================ */
+        // ========== 渲染 ==========
         function renderTodos() {
-            const list = document.getElementById('todo-list');
-            list.innerHTML = '';
-
+            const list = document.getElementById('todo-list'); list.innerHTML = '';
             if (isTodoTrashView) {
-                if (!todoTrash.length) {
-                    list.innerHTML = '<div class="empty-tip"><span class="empty-icon">🗑️</span>回收站空空如也</div>';
-                    return;
-                }
-                todoTrash.forEach(item => {
-                    const el = document.createElement('div'); el.className = 'item-card';
-                    el.innerHTML = `
-                        <div class="todo-info-wrapper">
-                            <span style="color:var(--text-muted);font-size:0.92rem;">${escapeHtml(item.text)}</span>
-                            <span class="timestamp">创建于 ${item.time || '未知'}</span>
-                        </div>
-                        <div>
-                            <button class="action-text-btn restore-btn" onclick="restoreTodo(${item.id})">还原</button>
-                            <button class="action-text-btn" onclick="burnTodo(${item.id})">粉碎</button>
-                        </div>`;
-                    list.appendChild(el);
-                });
+                if (!todoTrash.length) { list.innerHTML = '<div class="empty-tip"><span class="empty-icon">🗑️</span>回收站空空如也</div>'; return; }
+                todoTrash.forEach(item => { const el = document.createElement('div'); el.className = 'item-card'; el.innerHTML = `<div class="todo-info-wrapper"><span style="color:var(--text-muted);font-size:0.92rem;">${escapeHtml(item.text)}</span><span class="timestamp">创建于 ${item.time||'未知'}</span></div><div><button class="action-text-btn restore-btn" onclick="restoreTodo(${item.id})">还原</button><button class="action-text-btn" onclick="burnTodo(${item.id})">粉碎</button></div>`; list.appendChild(el); });
             } else {
-                if (!todos.length) {
-                    list.innerHTML = '<div class="empty-tip"><span class="empty-icon">📝</span>今天还没有安排任务</div>';
-                    return;
-                }
-                todos.forEach((todo, index) => {
-                    const el = document.createElement('div');
-                    el.className = `item-card todo-item ${todo.is_completed ? 'completed' : ''}`;
-                    el.setAttribute('draggable', 'true');
-                    el.dataset.id = todo.id;
-                    el.innerHTML = `
-                        <div class="todo-content">
-                            <input type="checkbox" ${todo.is_completed ? 'checked' : ''} onclick="toggleTodo(${todo.id}, ${todo.is_completed})">
-                            <div class="todo-info-wrapper">
-                                <div class="todo-text-container">
-                                    <span class="todo-seq">${index + 1}</span>
-                                    <span class="todo-text" ondblclick="startEditTodo(${todo.id}, this)">${escapeHtml(todo.text)}</span>
-                                </div>
-                                <span class="timestamp">创建于 ${formatTime(todo.created_at)}</span>
-                            </div>
-                        </div>
-                        <button class="action-text-btn" onclick="trashTodo(${todo.id})" style="position:relative;z-index:2;">删除</button>`;
-                    list.appendChild(el);
-                });
+                if (!todos.length) { list.innerHTML = '<div class="empty-tip"><span class="empty-icon">📝</span>今天还没有安排任务</div>'; return; }
+                todos.forEach((todo, i) => { const el = document.createElement('div'); el.className = `item-card todo-item ${todo.is_completed?'completed':''}`; el.setAttribute('draggable','true'); el.dataset.id = todo.id; el.innerHTML = `<div class="todo-content"><input type="checkbox" ${todo.is_completed?'checked':''} onclick="toggleTodo(${todo.id},${todo.is_completed})"><div class="todo-info-wrapper"><div class="todo-text-container"><span class="todo-seq">${i+1}</span><span class="todo-text" ondblclick="startEditTodo(${todo.id},this)">${escapeHtml(todo.text)}</span></div><span class="timestamp">创建于 ${formatTime(todo.created_at)}</span></div></div><button class="action-text-btn" onclick="trashTodo(${todo.id})" style="position:relative;z-index:2;">删除</button>`; list.appendChild(el); });
             }
         }
 
-        function toggleTodoTrash() {
-            isTodoTrashView = !isTodoTrashView;
-            document.getElementById('todo-input-zone').style.display = isTodoTrashView ? 'none' : 'flex';
-            document.getElementById('todo-panel-title').innerText = isTodoTrashView ? '待办 · 回收站' : '每日待办';
-            document.getElementById('todo-trash-toggle').innerText = isTodoTrashView ? '返回列表' : '回收站';
-            triggerViewTransition('todo-list', renderTodos);
-        }
+        function toggleTodoTrash() { isTodoTrashView = !isTodoTrashView; document.getElementById('todo-input-zone').style.display = isTodoTrashView ? 'none' : 'flex'; document.getElementById('todo-panel-title').innerText = isTodoTrashView ? '待办 · 回收站' : '每日待办'; document.getElementById('todo-trash-toggle').innerText = isTodoTrashView ? '返回列表' : '回收站'; triggerViewTransition('todo-list', renderTodos); }
 
-        /* ============================================
-           渲染：灵感
-           ============================================ */
         function renderIdeas() {
-            const list = document.getElementById('idea-list');
-            list.innerHTML = '';
-
+            const list = document.getElementById('idea-list'); list.innerHTML = '';
             if (isIdeaTrashView) {
-                if (!ideaTrash.length) {
-                    list.innerHTML = '<div class="empty-tip"><span class="empty-icon">🗑️</span>回收站空空如也</div>';
-                    return;
-                }
-                ideaTrash.forEach(item => {
-                    const el = document.createElement('div'); el.className = 'idea-card'; el.style.opacity = '0.6';
-                    el.innerHTML = `
-                        <div class="idea-header">
-                            <span class="timestamp">创建于 ${item.time || '未知'}</span>
-                            <div>
-                                <button class="action-text-btn restore-btn" onclick="restoreIdea(${item.id})">还原</button>
-                                <button class="action-text-btn" onclick="burnIdea(${item.id})">粉碎</button>
-                            </div>
-                        </div>
-                        <div class="idea-text">${escapeHtml(item.text)}</div>`;
-                    list.appendChild(el);
-                });
+                if (!ideaTrash.length) { list.innerHTML = '<div class="empty-tip"><span class="empty-icon">🗑️</span>回收站空空如也</div>'; return; }
+                ideaTrash.forEach(item => { const el = document.createElement('div'); el.className = 'idea-card'; el.style.opacity = '0.6'; el.innerHTML = `<div class="idea-header"><span class="timestamp">创建于 ${item.time||'未知'}</span><div><button class="action-text-btn restore-btn" onclick="restoreIdea(${item.id})">还原</button><button class="action-text-btn" onclick="burnIdea(${item.id})">粉碎</button></div></div><div class="idea-text">${escapeHtml(item.text)}</div>`; list.appendChild(el); });
             } else {
-                if (!ideas.length) {
-                    list.innerHTML = '<div class="empty-tip"><span class="empty-icon">💡</span>捕捉一瞬间的火花</div>';
-                    return;
-                }
-                ideas.forEach(idea => {
-                    const el = document.createElement('div'); el.className = 'idea-card';
-                    el.innerHTML = `
-                        <div class="idea-header">
-                            <span class="timestamp">记录于 ${formatTime(idea.created_at)}</span>
-                            <button class="action-text-btn" onclick="trashIdea(${idea.id})">删除</button>
-                        </div>
-                        <div class="idea-text" ondblclick="startEditIdea(${idea.id}, this)">${escapeHtml(idea.text)}</div>`;
-                    list.appendChild(el);
-                });
+                if (!ideas.length) { list.innerHTML = '<div class="empty-tip"><span class="empty-icon">💡</span>捕捉一瞬间的火花</div>'; return; }
+                ideas.forEach(idea => { const el = document.createElement('div'); el.className = 'idea-card'; el.innerHTML = `<div class="idea-header"><span class="timestamp">记录于 ${formatTime(idea.created_at)}</span><button class="action-text-btn" onclick="trashIdea(${idea.id})">删除</button></div><div class="idea-text" ondblclick="startEditIdea(${idea.id},this)">${escapeHtml(idea.text)}</div>`; list.appendChild(el); });
             }
         }
 
-        function toggleIdeaTrash() {
-            isIdeaTrashView = !isIdeaTrashView;
-            document.getElementById('idea-input-zone').style.display = isIdeaTrashView ? 'none' : 'flex';
-            document.getElementById('idea-panel-title').innerText = isIdeaTrashView ? '灵感 · 回收站' : '灵感闪现';
-            document.getElementById('idea-trash-toggle').innerText = isIdeaTrashView ? '返回列表' : '回收站';
-            triggerViewTransition('idea-list', renderIdeas);
-        }
+        function toggleIdeaTrash() { isIdeaTrashView = !isIdeaTrashView; document.getElementById('idea-input-zone').style.display = isIdeaTrashView ? 'none' : 'flex'; document.getElementById('idea-panel-title').innerText = isIdeaTrashView ? '灵感 · 回收站' : '灵感闪现'; document.getElementById('idea-trash-toggle').innerText = isIdeaTrashView ? '返回列表' : '回收站'; triggerViewTransition('idea-list', renderIdeas); }
 
-        /* ============================================
-           工具函数
-           ============================================ */
-        function escapeHtml(text) {
-            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
-        }
+        function escapeHtml(t) { const m = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}; return t.replace(/[&<>"']/g, c => m[c]); }
     </script>
 </body>
 </html>
