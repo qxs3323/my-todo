@@ -4,132 +4,548 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>随心工作台</title>
-    
-    <!-- 🟢 1. 引入 Supabase 官方 SDK -->
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-<script>
+    <script>
         const supabaseUrl = 'https://wyvykqfmcatohbekwikg.supabase.co';
         const supabaseKey = 'sb_publishable_YaPCqd25hTc_xD-8ZOPZ0g_ssm05UU6';
         const { createClient } = window.supabase;
         const supabaseClient = createClient(supabaseUrl, supabaseKey);
     </script>
+
     <style>
-        /* 统一定义四套主题色 —— 高透液态玻璃 */
+        /* ============================================
+           四套主题色变量
+           ============================================ */
         :root[data-theme="light"] {
-            --bg-color: #f4f6f9; --card-bg: #ffffff; --text-main: #2c3e50; --text-muted: #7f8c8d;
-            --accent-todo: #3498db; --accent-idea: #e67e22; --border-color: #eaeaea;
-            --glass-bg: rgba(255, 255, 255, 0.15); --glass-border: rgba(255, 255, 255, 0.65);
+            --bg-color: #f0f2f5;
+            --bg-gradient: linear-gradient(135deg, #e8ecf1 0%, #f5f7fa 40%, #eef1f5 100%);
+            --card-bg: rgba(255, 255, 255, 0.82);
+            --card-bg-solid: #ffffff;
+            --text-main: #1a2332;
+            --text-muted: #8899aa;
+            --accent-todo: #4a90d9;
+            --accent-todo-glow: rgba(74, 144, 217, 0.15);
+            --accent-idea: #e8833a;
+            --accent-idea-glow: rgba(232, 131, 58, 0.12);
+            --border-color: rgba(0, 0, 0, 0.06);
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.65);
             --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.02), 0 16px 40px rgba(44, 62, 80, 0.04);
             --glass-hover: rgba(0, 0, 0, 0.03);
+            --panel-shadow: 0 20px 60px rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0,0,0,0.03);
+            --input-bg: rgba(240, 242, 245, 0.8);
+            --btn-shadow: 0 4px 14px rgba(74, 144, 217, 0.3);
+            --btn-shadow-hover: 0 8px 24px rgba(74, 144, 217, 0.4);
+            --idea-btn-shadow: 0 4px 14px rgba(232, 131, 58, 0.3);
+            --idea-btn-shadow-hover: 0 8px 24px rgba(232, 131, 58, 0.4);
+            --scrollbar-thumb: rgba(0, 0, 0, 0.12);
+            --decorative-opacity: 0.04;
+            --check-color: #4a90d9;
+            --card-hover-bg: rgba(74, 144, 217, 0.03);
         }
         :root[data-theme="dark"] {
-            --bg-color: #1a1a1a; --card-bg: #2d2d2d; --text-main: #ecf0f1; --text-muted: #95a5a6;
-            --accent-todo: #5dade2; --accent-idea: #f5b041; --border-color: #3d3d3d;
-            --glass-bg: rgba(45, 45, 45, 0.2); --glass-border: rgba(255, 255, 255, 0.15);
-            --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.4); --glass-hover: rgba(255, 255, 255, 0.06);
+            --bg-color: #0f1117;
+            --bg-gradient: linear-gradient(135deg, #0a0c12 0%, #161822 40%, #12141e 100%);
+            --card-bg: rgba(30, 33, 46, 0.85);
+            --card-bg-solid: #1e2130;
+            --text-main: #e4e8f0;
+            --text-muted: #6b7394;
+            --accent-todo: #6cacf8;
+            --accent-todo-glow: rgba(108, 172, 248, 0.12);
+            --accent-idea: #f7b955;
+            --accent-idea-glow: rgba(247, 185, 85, 0.1);
+            --border-color: rgba(255, 255, 255, 0.06);
+            --glass-bg: rgba(45, 45, 45, 0.2);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+            --glass-hover: rgba(255, 255, 255, 0.06);
+            --panel-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0,0,0,0.3);
+            --input-bg: rgba(20, 22, 32, 0.8);
+            --btn-shadow: 0 4px 14px rgba(108, 172, 248, 0.25);
+            --btn-shadow-hover: 0 8px 24px rgba(108, 172, 248, 0.35);
+            --idea-btn-shadow: 0 4px 14px rgba(247, 185, 85, 0.2);
+            --idea-btn-shadow-hover: 0 8px 24px rgba(247, 185, 85, 0.3);
+            --scrollbar-thumb: rgba(255, 255, 255, 0.1);
+            --decorative-opacity: 0.03;
+            --check-color: #6cacf8;
+            --card-hover-bg: rgba(108, 172, 248, 0.04);
         }
         :root[data-theme="forest"] {
-            --bg-color: #e8efe9; --card-bg: #fafcfb; --text-main: #2d3a34; --text-muted: #8ca396;
-            --accent-todo: #6b8e79; --accent-idea: #cca47c; --border-color: #dae3dd;
-            --glass-bg: rgba(250, 252, 251, 0.2); --glass-border: rgba(255, 255, 255, 0.7);
-            --glass-shadow: 0 16px 40px rgba(107, 142, 121, 0.05); --glass-hover: rgba(107, 142, 121, 0.06);
+            --bg-color: #e2ebe4;
+            --bg-gradient: linear-gradient(135deg, #d4e4d8 0%, #e8f0ea 35%, #dce8de 65%, #e0ece3 100%);
+            --card-bg: rgba(245, 250, 247, 0.82);
+            --card-bg-solid: #f5faf7;
+            --text-main: #2a3830;
+            --text-muted: #7d9a88;
+            --accent-todo: #5a8a6b;
+            --accent-todo-glow: rgba(90, 138, 107, 0.15);
+            --accent-idea: #c49a6c;
+            --accent-idea-glow: rgba(196, 154, 108, 0.12);
+            --border-color: rgba(90, 138, 107, 0.1);
+            --glass-bg: rgba(250, 252, 251, 0.2);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --glass-shadow: 0 16px 40px rgba(107, 142, 121, 0.05);
+            --glass-hover: rgba(107, 142, 121, 0.06);
+            --panel-shadow: 0 20px 60px rgba(90, 138, 107, 0.08), 0 4px 16px rgba(0,0,0,0.03);
+            --input-bg: rgba(220, 232, 222, 0.7);
+            --btn-shadow: 0 4px 14px rgba(90, 138, 107, 0.3);
+            --btn-shadow-hover: 0 8px 24px rgba(90, 138, 107, 0.4);
+            --idea-btn-shadow: 0 4px 14px rgba(196, 154, 108, 0.3);
+            --idea-btn-shadow-hover: 0 8px 24px rgba(196, 154, 108, 0.4);
+            --scrollbar-thumb: rgba(90, 138, 107, 0.18);
+            --decorative-opacity: 0.06;
+            --check-color: #5a8a6b;
+            --card-hover-bg: rgba(90, 138, 107, 0.04);
         }
         :root[data-theme="cute-pink"] {
-            --bg-color: #fff0f5; --card-bg: #ffffff; --text-main: #6c4a4a; --text-muted: #caa5a5;
-            --accent-todo: #ff85a2; --accent-idea: #ffb3c6; --border-color: #ffe3e8;
-            --glass-bg: rgba(255, 255, 255, 0.25); --glass-border: rgba(255, 255, 255, 0.75);
-            --glass-shadow: 0 16px 40px rgba(255, 133, 162, 0.08); --glass-hover: rgba(255, 133, 162, 0.05);
+            --bg-color: #fff0f3;
+            --bg-gradient: linear-gradient(135deg, #ffe0e8 0%, #fff5f7 35%, #ffecf1 65%, #fff0f5 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-bg-solid: #ffffff;
+            --text-main: #5c3a42;
+            --text-muted: #c49aa5;
+            --accent-todo: #f06292;
+            --accent-todo-glow: rgba(240, 98, 146, 0.12);
+            --accent-idea: #ff8a80;
+            --accent-idea-glow: rgba(255, 138, 128, 0.12);
+            --border-color: rgba(240, 98, 146, 0.08);
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.75);
+            --glass-shadow: 0 16px 40px rgba(255, 133, 162, 0.08);
+            --glass-hover: rgba(255, 133, 162, 0.05);
+            --panel-shadow: 0 20px 60px rgba(240, 98, 146, 0.1), 0 4px 16px rgba(0,0,0,0.03);
+            --input-bg: rgba(255, 240, 243, 0.8);
+            --btn-shadow: 0 4px 14px rgba(240, 98, 146, 0.3);
+            --btn-shadow-hover: 0 8px 24px rgba(240, 98, 146, 0.4);
+            --idea-btn-shadow: 0 4px 14px rgba(255, 138, 128, 0.3);
+            --idea-btn-shadow-hover: 0 8px 24px rgba(255, 138, 128, 0.4);
+            --scrollbar-thumb: rgba(240, 98, 146, 0.15);
+            --decorative-opacity: 0.05;
+            --check-color: #f06292;
+            --card-hover-bg: rgba(240, 98, 146, 0.03);
         }
+
         :root {
-            --radius: 12px; --shadow-sm: 0 4px 12px rgba(0,0,0,0.02); --shadow-md: 0 10px 30px rgba(0,0,0,0.03);
-            --spring-transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
-            --jelly-animation: springIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --transition-elastic: cubic-bezier(0.25, 1, 0.5, 1);
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease; }
-        body { background-color: var(--bg-color); color: var(--text-main); padding: 40px 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Noto Sans SC", sans-serif; }
+        html { scroll-behavior: smooth; }
         .hidden { display: none !important; }
-        .auth-shell, .app-shell { width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: var(--text-main);
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 1s var(--transition-smooth), color 0.6s ease;
+        }
+        body::before, body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            transition: all 1.4s var(--transition-smooth);
+        }
+        body::before {
+            width: 600px; height: 600px;
+            top: -200px; right: -100px;
+            background: radial-gradient(circle, var(--accent-todo-glow) 0%, transparent 70%);
+            opacity: var(--decorative-opacity);
+        }
+        body::after {
+            width: 500px; height: 500px;
+            bottom: -150px; left: -100px;
+            background: radial-gradient(circle, var(--accent-idea-glow) 0%, transparent 70%);
+            opacity: var(--decorative-opacity);
+        }
+
+        /* ============================================
+           主题专属动效容器
+           ============================================ */
+        .theme-deco { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; overflow: hidden; opacity: 0; transition: opacity 1.6s var(--transition-smooth); }
+        :root[data-theme="light"] .deco-light { opacity: 1; }
+        :root[data-theme="dark"] .deco-dark { opacity: 1; }
+        :root[data-theme="forest"] .deco-forest { opacity: 1; }
+        :root[data-theme="cute-pink"] .deco-pink { opacity: 1; }
+
+        .dust-mote { position: absolute; border-radius: 50%; animation: dustDrift linear infinite; }
+        @keyframes dustDrift {
+            0%   { transform: translate(0, 0) scale(0.4); opacity: 0; }
+            8%   { opacity: var(--peak); }
+            70%  { opacity: var(--mid); }
+            100% { transform: translate(var(--dx), var(--dy)) scale(0.6); opacity: 0; }
+        }
+        .star { position: absolute; background: white; border-radius: 50%; animation: twinkle var(--dur) ease-in-out infinite; opacity: 0; }
+        @keyframes twinkle { 0%, 100% { opacity: 0; } 50% { opacity: var(--max-opacity); } }
+        .firefly { position: absolute; background: #c9a84c; border-radius: 50%; box-shadow: 0 0 6px 2px rgba(201, 168, 76, 0.3); animation: fireflyGlow ease-in-out infinite; }
+        @keyframes fireflyGlow {
+            0%, 100% { transform: translate(0, 0); opacity: 0; box-shadow: 0 0 2px 0px rgba(201, 168, 76, 0.1); }
+            12% { opacity: 0.65; box-shadow: 0 0 10px 4px rgba(201, 168, 76, 0.45); }
+            45% { transform: translate(var(--dx), var(--dy)); opacity: 0.25; box-shadow: 0 0 4px 1px rgba(201, 168, 76, 0.15); }
+            70% { opacity: 0.7; box-shadow: 0 0 12px 5px rgba(201, 168, 76, 0.5); }
+            92% { opacity: 0.05; box-shadow: 0 0 2px 0px rgba(201, 168, 76, 0.05); }
+        }
+        .sparkle { position: absolute; background: white; border-radius: 50%; animation: sparklePop ease-in-out infinite; animation-duration: var(--sdur); }
+        @keyframes sparklePop {
+            0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+            40% { opacity: 0.85; transform: scale(1.2) rotate(90deg); box-shadow: 0 0 10px 4px rgba(240, 98, 146, 0.35); }
+            60% { opacity: 0.4; transform: scale(0.7) rotate(180deg); box-shadow: 0 0 4px 1px rgba(240, 98, 146, 0.15); }
+            80% { opacity: 0.7; transform: scale(1) rotate(270deg); box-shadow: 0 0 8px 3px rgba(255, 138, 128, 0.3); }
+        }
+
+        /* ============================================
+           Shell 布局
+           ============================================ */
+        .auth-shell, .app-shell { width: 100%; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 10; }
         .auth-shell { flex: 1; justify-content: center; }
-        .auth-card { width: 100%; max-width: 460px; background: var(--card-bg); border-radius: 24px; padding: 36px 32px; box-shadow: var(--shadow-md); border: 1px solid var(--glass-border); animation: fadeInUp 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
-        .auth-eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-todo); margin-bottom: 10px; }
-        .auth-card h1 { font-size: 2rem; margin-bottom: 10px; }
-        .auth-subtitle { color: var(--text-muted); line-height: 1.7; font-size: 0.95rem; margin-bottom: 24px; }
+
+        /* ============================================
+           登录卡片
+           ============================================ */
+        .auth-card {
+            width: 100%; max-width: 440px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px 36px;
+            box-shadow: var(--panel-shadow);
+            animation: panelReveal 0.65s var(--transition-elastic) both;
+            transition: background 0.8s ease, border-color 0.8s ease, box-shadow 0.8s ease;
+        }
+        .auth-eyebrow { font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-todo); margin-bottom: 8px; font-weight: 600; transition: color 0.6s ease; }
+        .auth-card h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
+        .auth-subtitle { color: var(--text-muted); line-height: 1.7; font-size: 0.9rem; margin-bottom: 28px; transition: color 0.6s ease; }
         .auth-form { display: flex; flex-direction: column; gap: 14px; }
-        .auth-form input[type="email"], .auth-form input[type="password"] { width: 100%; height: 48px; padding: 0 16px; border: 1px solid var(--border-color); border-radius: calc(var(--radius) - 2px); font-size: 0.95rem; outline: none; background-color: var(--bg-color); color: var(--text-main); transition: var(--spring-transition); }
-        .auth-form input[type="email"]:focus, .auth-form input[type="password"]:focus { border-color: var(--accent-todo); transform: scale(1.01); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
-        .auth-submit-btn { width: 100%; background: linear-gradient(135deg, var(--accent-todo), var(--accent-idea)); }
-        .auth-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
-        .auth-switch-btn, .ghost-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.9rem; padding: 0; }
+        .auth-form input[type="email"], .auth-form input[type="password"] {
+            width: 100%; height: 48px; padding: 0 18px;
+            border: 1.5px solid var(--border-color); border-radius: var(--radius-sm);
+            font-size: 0.92rem; outline: none; background: var(--input-bg); color: var(--text-main);
+            transition: all 0.35s var(--transition-elastic), background 0.6s ease, border-color 0.6s ease, color 0.6s ease;
+        }
+        .auth-form input[type="email"]:focus, .auth-form input[type="password"]:focus {
+            border-color: var(--accent-todo); transform: scale(1.015); box-shadow: 0 0 0 3px var(--accent-todo-glow);
+        }
+        .auth-submit-btn { width: 100%; margin-top: 4px; background: linear-gradient(135deg, var(--accent-todo), var(--accent-idea)); box-shadow: var(--btn-shadow); }
+        .auth-submit-btn:hover { box-shadow: var(--btn-shadow-hover); }
+        .auth-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+        .auth-switch-btn, .ghost-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.85rem; padding: 0; transition: color 0.3s ease; }
         .auth-switch-btn strong, .ghost-btn strong { color: var(--text-main); font-weight: 600; }
+        .auth-switch-btn:hover, .ghost-btn:hover { color: var(--accent-todo); }
         .auth-link-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
-        .auth-message { min-height: 22px; margin-top: 12px; color: var(--text-muted); font-size: 0.88rem; }
-        .auth-message.error { color: #d35454; }
-        .auth-message.success { color: #2e8b57; }
-        .header-bar { width: 100%; max-width: 1100px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; animation: fadeInDown 0.5s ease; position: relative; z-index: 999; gap: 16px; }
-        .header-user { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.9rem; flex-wrap: wrap; }
-        .header-user strong { color: var(--text-main); font-weight: 600; }
+        .auth-message { min-height: 22px; margin-top: 14px; color: var(--text-muted); font-size: 0.85rem; transition: color 0.6s ease; }
+        .auth-message.error { color: #ef4444; }
+        .auth-message.success { color: #22c55e; }
+
+        /* ============================================
+           顶部栏
+           ============================================ */
+        .header-bar {
+            width: 100%; max-width: 1140px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 36px; position: relative; z-index: 100; gap: 16px;
+            animation: headerSlideIn 0.7s var(--transition-elastic);
+        }
+        .app-title {
+            font-size: 1.35rem; font-weight: 800; letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--accent-todo), var(--accent-idea));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            animation: titleFadeIn 0.8s 0.2s var(--transition-smooth) both;
+        }
+        .header-right-group { display: flex; align-items: center; gap: 16px; }
+        .header-user { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted); transition: color 0.6s ease; }
+        .header-user strong { color: var(--text-main); font-weight: 600; transition: color 0.6s ease; }
+
+        @keyframes headerSlideIn { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes titleFadeIn { from { opacity: 0; transform: translateX(-12px); } to { opacity: 1; transform: translateX(0); } }
+
+        /* ============================================
+           主题选择器
+           ============================================ */
         .custom-dropdown { position: relative; user-select: none; }
-        .dropdown-btn { padding: 8px 35px 8px 20px; border-radius: 20px; background-color: var(--glass-bg); backdrop-filter: blur(4px) saturate(200%); -webkit-backdrop-filter: blur(4px) saturate(200%); border: 1.5px solid var(--glass-border); color: var(--text-main); font-size: 0.85rem; font-weight: 600; cursor: pointer; box-shadow: var(--glass-shadow); transition: var(--spring-transition); position: relative; }
+        .dropdown-btn {
+            padding: 8px 35px 8px 20px; border-radius: 20px;
+            background-color: var(--glass-bg); backdrop-filter: blur(4px) saturate(200%); -webkit-backdrop-filter: blur(4px) saturate(200%);
+            border: 1.5px solid var(--glass-border); color: var(--text-main); font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; box-shadow: var(--glass-shadow);
+            transition: transform 0.3s var(--transition-elastic), background-color 0.3s var(--transition-elastic), box-shadow 0.3s var(--transition-elastic), color 0.6s ease, border-color 0.6s ease;
+            position: relative;
+        }
         .dropdown-btn:hover { transform: translateY(-2px); background-color: rgba(255, 255, 255, 0.4); box-shadow: 0 14px 28px rgba(0,0,0,0.04); }
-        .dropdown-btn::after { content: ""; position: absolute; right: 16px; top: 52%; transform: translateY(-50%); border: 4px solid transparent; border-top-color: var(--text-muted); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+        .dropdown-btn::after { content: ""; position: absolute; right: 16px; top: 52%; transform: translateY(-50%); border: 4px solid transparent; border-top-color: var(--text-muted); transition: transform 0.3s var(--transition-elastic), border-color 0.6s ease; }
         .custom-dropdown.active .dropdown-btn::after { transform: translateY(-50%) rotate(180deg); }
-        .dropdown-menu { position: absolute; top: calc(100% + 8px); right: 0; background-color: var(--glass-bg); backdrop-filter: blur(5px) saturate(200%); -webkit-backdrop-filter: blur(5px) saturate(200%); border: 1.5px solid var(--glass-border); border-radius: var(--radius); box-shadow: var(--glass-shadow); width: 130px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(10px) scale(0.95); transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1), transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.3s; }
-        .custom-dropdown.active .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+        .dropdown-menu {
+            position: absolute; top: calc(100% + 8px); right: 0;
+            background-color: var(--glass-bg); backdrop-filter: blur(5px) saturate(200%); -webkit-backdrop-filter: blur(5px) saturate(200%);
+            border: 1.5px solid var(--glass-border); border-radius: var(--radius); box-shadow: var(--glass-shadow);
+            width: 130px; padding: 6px; opacity: 0; pointer-events: none;
+            transform: translateY(10px) scale(0.95);
+            transition: opacity 0.3s var(--transition-elastic), transform 0.3s var(--transition-elastic);
+        }
+        .custom-dropdown.active .dropdown-menu { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
         .dropdown-item { padding: 8px 14px; font-size: 0.85rem; color: var(--text-main); border-radius: calc(var(--radius) - 6px); cursor: pointer; transition: background-color 0.2s, color 0.2s; text-align: left; }
         .dropdown-item:hover { background-color: var(--glass-hover); }
         .dropdown-item.selected { font-weight: 700; background-color: var(--glass-hover); }
+
+        /* ============================================
+           主体容器
+           ============================================ */
         .container { width: 100%; max-width: 1100px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-        @media (max-width: 768px) { .container { grid-template-columns: 1fr; gap: 20px; } .auth-card { padding: 30px 22px; } .header-bar { flex-direction: column; align-items: stretch; } .header-user { justify-content: space-between; } }
-        .panel { background: var(--card-bg); border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; height: 78vh; min-height: 540px; position: relative; animation: fadeInUp 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
-        h2 { font-size: 1.65rem; font-weight: 700; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px dashed var(--border-color); display: flex; align-items: center; justify-content: space-between; }
-        .todo-title { color: var(--accent-todo); } .idea-title { color: var(--accent-idea); }
-        .panel-action-btn { font-size: 0.85rem; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 4px 10px; border-radius: 6px; font-weight: normal; transition: var(--spring-transition); }
-        .panel-action-btn:hover { color: var(--text-main); background-color: var(--bg-color); }
-        .input-group { display: flex; gap: 12px; margin-bottom: 24px; align-items: center; width: 100%; }
-        input[type="text"], textarea.unified-input { flex: 1; height: 44px; padding: 0 16px; line-height: 42px; border: 1px solid var(--border-color); border-radius: calc(var(--radius) - 4px); font-size: 0.95rem; outline: none; background-color: var(--bg-color); color: var(--text-main); resize: none; transition: var(--spring-transition); }
-        input[type="text"]:focus, textarea.unified-input:focus { border-color: var(--text-muted); transform: scale(1.01); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
-        textarea.unified-input { line-height: 1.4; padding-top: 11px; padding-bottom: 11px; height: 44px; overflow-y: hidden; }
-        textarea.unified-input::-webkit-scrollbar { display: none; width: 0 !important; height: 0 !important; }
-        button.main-btn { color: white; border: none; height: 44px; padding: 0 24px; border-radius: calc(var(--radius) - 4px); cursor: pointer; font-weight: 500; font-size: 0.95rem; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: var(--spring-transition); }
-        button.main-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.12); opacity: 0.95; }
-        button.main-btn:active { transform: scale(0.92); }
-        .todo-btn { background: var(--accent-todo); } .idea-btn { background: var(--accent-idea); }
-        .list-container { flex: 1; overflow-y: auto; padding-right: 4px; transition: var(--spring-transition); }
-        .list-container.view-changing { opacity: 0; transform: scale(0.98); }
-        .list-container::-webkit-scrollbar { width: 4px; }
-        .list-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-        .item-card { display: flex; align-items: center; justify-content: space-between; padding: 14px 4px; border-bottom: 1px solid var(--border-color); background-color: transparent; animation: var(--jelly-animation); }
-        .todo-item { cursor: grab; } .todo-item:active { cursor: grabbing; }
-        .drag-placeholder { height: 52px; background-color: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: calc(var(--radius) - 4px); margin: 4px 0; box-sizing: border-box; opacity: 0.5; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); animation: expandSpace 0.2s cubic-bezier(0.25, 1, 0.5, 1); }
-        @keyframes expandSpace { from { height: 0; opacity: 0; margin: 0; } to { height: 52px; opacity: 0.5; margin: 4px 0; } }
+
+        /* ============================================
+           面板卡片
+           ============================================ */
+        .panel {
+            background: var(--card-bg); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--glass-border); border-radius: 20px; padding: 28px;
+            box-shadow: var(--panel-shadow); display: flex; flex-direction: column;
+            height: 78vh; min-height: 540px; position: relative; overflow: hidden;
+            opacity: 0; animation: panelReveal 0.65s var(--transition-elastic) forwards;
+            transition: background 0.8s ease, border-color 0.8s ease, box-shadow 0.8s ease;
+        }
+        .panel:nth-child(1) { animation-delay: 0.15s; }
+        .panel:nth-child(2) { animation-delay: 0.25s; }
+        .panel::before {
+            content: ''; position: absolute; top: 0; left: 20px; right: 20px; height: 3px;
+            border-radius: 0 0 3px 3px;
+            background: linear-gradient(90deg, var(--accent-todo), var(--accent-idea));
+            opacity: 0.4; transition: opacity 0.4s ease, background 0.8s ease;
+        }
+        .panel:hover::before { opacity: 0.7; }
+
+        @keyframes panelReveal { from { opacity: 0; transform: translateY(32px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        h2 {
+            font-size: 1.5rem; font-weight: 800; margin-bottom: 20px; padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;
+            letter-spacing: -0.3px; transition: color 0.6s ease, border-color 0.6s ease;
+        }
+        .todo-title { color: var(--accent-todo); transition: color 0.6s ease; }
+        .idea-title { color: var(--accent-idea); transition: color 0.6s ease; }
+
+        .panel-action-btn {
+            font-size: 0.8rem; color: var(--text-muted); background: none; border: none; cursor: pointer;
+            padding: 6px 12px; border-radius: 8px; font-weight: 500;
+            transition: all 0.3s var(--transition-elastic), color 0.6s ease; letter-spacing: 0.2px;
+        }
+        .panel-action-btn:hover { color: var(--text-main); background: var(--glass-hover); transform: scale(1.04); }
+
+        /* ============================================
+           输入区域
+           ============================================ */
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; align-items: center; width: 100%; }
+        input[type="text"], textarea.unified-input {
+            flex: 1; height: 46px; padding: 0 18px; line-height: 44px;
+            border: 1.5px solid var(--border-color); border-radius: var(--radius-sm);
+            font-size: 0.92rem; outline: none; background: var(--input-bg); color: var(--text-main); resize: none;
+            transition: all 0.35s var(--transition-elastic), background 0.6s ease, border-color 0.6s ease, color 0.6s ease;
+        }
+        input[type="text"]:focus, textarea.unified-input:focus {
+            border-color: var(--accent-todo); transform: scale(1.015); box-shadow: 0 0 0 3px var(--accent-todo-glow);
+        }
+        textarea.unified-input { line-height: 1.5; padding: 12px 18px; height: 46px; overflow-y: hidden; }
+        textarea.unified-input::-webkit-scrollbar { display: none; }
+
+        button.main-btn {
+            color: white; border: none; height: 46px; padding: 0 26px; border-radius: var(--radius-sm);
+            cursor: pointer; font-weight: 600; font-size: 0.92rem; display: inline-flex;
+            align-items: center; justify-content: center; gap: 6px;
+            transition: all 0.35s var(--transition-spring), background 0.8s ease, box-shadow 0.8s ease;
+            letter-spacing: 0.3px; position: relative; overflow: hidden;
+        }
+        button.main-btn::after {
+            content: ''; position: absolute; inset: 0;
+            background: radial-gradient(circle at var(--ripple-x, 50%) var(--ripple-y, 50%), rgba(255,255,255,0.3) 0%, transparent 60%);
+            opacity: 0; transition: opacity 0.4s;
+        }
+        button.main-btn:active::after { opacity: 1; transition: opacity 0s; }
+        button.main-btn:hover { transform: translateY(-2px) scale(1.03); }
+        button.main-btn:active { transform: scale(0.95); transition-duration: 0.1s; }
+
+        .todo-btn {
+            background: linear-gradient(135deg, var(--accent-todo), color-mix(in srgb, var(--accent-todo) 80%, #fff));
+            box-shadow: var(--btn-shadow);
+        }
+        .todo-btn:hover { box-shadow: var(--btn-shadow-hover); }
+        .idea-btn {
+            background: linear-gradient(135deg, var(--accent-idea), color-mix(in srgb, var(--accent-idea) 80%, #fff));
+            box-shadow: var(--idea-btn-shadow);
+        }
+        .idea-btn:hover { box-shadow: var(--idea-btn-shadow-hover); }
+
+        /* ============================================
+           列表容器
+           ============================================ */
+        .list-container {
+            flex: 1; overflow-y: auto; padding-right: 4px;
+            transition: opacity 0.25s var(--transition-smooth), transform 0.25s var(--transition-smooth);
+        }
+        .list-container.view-changing { opacity: 0; transform: scale(0.97) translateY(6px); }
+        .list-container::-webkit-scrollbar { width: 5px; }
+        .list-container::-webkit-scrollbar-track { background: transparent; }
+        .list-container::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
+        .list-container::-webkit-scrollbar-thumb:hover { background: var(--accent-todo); }
+
+        /* ============================================
+           待办卡片
+           ============================================ */
+        .item-card {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 8px; border-bottom: 1px solid var(--border-color); background-color: transparent;
+            animation: cardEnter 0.45s var(--transition-spring) both;
+            transition: background-color 0.25s ease, border-color 0.6s ease;
+        }
+        .item-card:hover { background: var(--card-hover-bg); }
+        @keyframes cardEnter { from { opacity: 0; transform: translateY(16px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        .todo-item { cursor: grab; }
+        .todo-item:active { cursor: grabbing; }
+
+        .drag-placeholder {
+            height: 52px; background: var(--accent-todo-glow);
+            border: 2px dashed var(--accent-todo); border-radius: var(--radius-sm);
+            margin: 4px 0; opacity: 0.4; animation: placeholderPulse 1.2s ease-in-out infinite;
+            transition: background 0.6s ease, border-color 0.6s ease;
+        }
+        @keyframes placeholderPulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.55; } }
+
         .todo-item.completed .todo-text, .todo-item.completed .todo-seq { text-decoration: line-through; color: var(--text-muted); opacity: 0.5; }
+
         .todo-content { display: flex; align-items: center; gap: 12px; flex: 1; pointer-events: none; }
         .todo-content input[type="checkbox"], .todo-content .todo-text-container { pointer-events: auto; }
         .todo-info-wrapper { display: flex; flex-direction: column; gap: 4px; flex: 1; }
         .todo-text-container { display: flex; gap: 6px; align-items: center; flex: 1; }
-        .inline-edit-input { width: 100%; border: 1px solid var(--text-muted); border-radius: 4px; padding: 2px 8px; font-size: 0.95rem; color: var(--text-main); background-color: var(--bg-color); outline: none; }
-        .todo-seq { font-weight: 700; color: var(--accent-todo); opacity: 0.9; font-size: 0.95rem; min-width: 22px; display: inline-block; user-select: none; }
-        .todo-text { cursor: text; }
-        .timestamp { font-size: 0.75rem; color: var(--text-muted); user-select: none; }
-        .todo-content input[type="checkbox"] { width: 17px; height: 17px; cursor: pointer; accent-color: var(--accent-todo); transition: var(--spring-transition); }
-        .todo-content input[type="checkbox"]:active { transform: scale(0.7); }
-        .idea-card { background: var(--bg-color); border-left: 4px solid var(--accent-idea); padding: 16px; margin-bottom: 12px; border-radius: calc(var(--radius) - 4px); animation: var(--jelly-animation); transition: transform 0.2s; }
-        .idea-card:hover { transform: translateX(2px); }
-        .idea-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; user-select: none; }
-        .idea-text { font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; word-break: break-all; cursor: text; }
-        .inline-edit-textarea { width: 100%; min-height: 60px; border: 1px solid var(--text-muted); border-radius: 6px; padding: 6px 10px; font-size: 0.95rem; line-height: 1.6; color: var(--text-main); background-color: var(--card-bg); outline: none; resize: vertical; }
-        .action-text-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; transition: var(--spring-transition); }
-        .action-text-btn:hover { color: #e74c3c; background: rgba(231, 76, 60, 0.08); }
-        .restore-btn:hover { color: var(--accent-todo); background: rgba(52, 152, 219, 0.08); }
-        @keyframes springIn { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        .empty-tip { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 40px; opacity: 0.5; animation: springIn 0.5s ease; }
+
+        .inline-edit-input {
+            width: 100%; border: 1.5px solid var(--accent-todo); border-radius: 6px;
+            padding: 4px 10px; font-size: 0.92rem; color: var(--text-main); background: var(--input-bg);
+            outline: none; box-shadow: 0 0 0 3px var(--accent-todo-glow);
+        }
+
+        .todo-seq {
+            font-weight: 800; color: var(--accent-todo); opacity: 0.85; font-size: 0.85rem;
+            min-width: 24px; display: inline-flex; align-items: center; justify-content: center;
+            height: 22px; background: var(--accent-todo-glow); border-radius: 6px; user-select: none;
+            transition: color 0.6s ease, background 0.6s ease;
+        }
+        .todo-text { cursor: text; transition: color 0.2s; }
+        .todo-text:hover { color: var(--accent-todo); }
+
+        .timestamp { font-size: 0.72rem; color: var(--text-muted); user-select: none; letter-spacing: 0.3px; transition: color 0.6s ease; }
+
+        .todo-content input[type="checkbox"] {
+            -webkit-appearance: none; appearance: none;
+            width: 20px; height: 20px; border: 2px solid var(--border-color); border-radius: 6px;
+            cursor: pointer; position: relative; flex-shrink: 0;
+            transition: all 0.3s var(--transition-spring), background 0.6s ease, border-color 0.6s ease;
+        }
+        .todo-content input[type="checkbox"]:checked { background: var(--check-color); border-color: var(--check-color); }
+        .todo-content input[type="checkbox"]:checked::after {
+            content: ''; position: absolute; left: 5px; top: 2px;
+            width: 5px; height: 9px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg);
+        }
+        .todo-content input[type="checkbox"]:active { transform: scale(0.75); }
+
+        /* ============================================
+           灵感卡片
+           ============================================ */
+        .idea-card {
+            background: var(--input-bg); border-left: 3px solid var(--accent-idea);
+            padding: 16px 18px; margin-bottom: 12px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            animation: cardEnter 0.45s var(--transition-spring) both;
+            transition: all 0.3s var(--transition-elastic), background 0.6s ease, border-color 0.6s ease;
+            position: relative;
+        }
+        .idea-card::before {
+            content: ''; position: absolute; left: 3px; top: 0; bottom: 0; width: 0;
+            background: var(--accent-idea-glow); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            transition: width 0.4s var(--transition-elastic), background 0.6s ease;
+        }
+        .idea-card:hover { transform: translateX(4px); box-shadow: -4px 0 20px var(--accent-idea-glow); }
+        .idea-card:hover::before { width: 100%; left: 0; }
+
+        .idea-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; user-select: none; position: relative; z-index: 1; }
+        .idea-text { font-size: 0.92rem; line-height: 1.65; white-space: pre-wrap; word-break: break-all; cursor: text; position: relative; z-index: 1; }
+
+        .inline-edit-textarea {
+            width: 100%; min-height: 60px; border: 1.5px solid var(--accent-idea); border-radius: 8px;
+            padding: 8px 12px; font-size: 0.92rem; line-height: 1.65; color: var(--text-main);
+            background: var(--card-bg-solid); outline: none; resize: vertical;
+            box-shadow: 0 0 0 3px var(--accent-idea-glow);
+        }
+
+        .action-text-btn {
+            background: none; border: none; color: var(--text-muted); cursor: pointer;
+            font-size: 0.78rem; padding: 4px 10px; border-radius: 6px; font-weight: 500;
+            transition: all 0.25s var(--transition-elastic), color 0.6s ease;
+        }
+        .action-text-btn:hover { color: #ef4444; background: rgba(239, 68, 68, 0.08); transform: scale(1.05); }
+        .restore-btn:hover { color: var(--accent-todo); background: var(--accent-todo-glow); }
+
+        .empty-tip {
+            text-align: center; color: var(--text-muted); font-size: 0.88rem; margin-top: 48px; opacity: 0.6;
+            animation: emptyFadeIn 0.6s var(--transition-elastic) both;
+            display: flex; flex-direction: column; align-items: center; gap: 10px; transition: color 0.6s ease;
+        }
+        .empty-tip .empty-icon { font-size: 2.4rem; opacity: 0.4; }
+        @keyframes emptyFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 0.6; transform: translateY(0); } }
+
+        /* 卡片交错动画延迟 */
+        .list-container .item-card:nth-child(1) { animation-delay: 0s; }
+        .list-container .item-card:nth-child(2) { animation-delay: 0.04s; }
+        .list-container .item-card:nth-child(3) { animation-delay: 0.08s; }
+        .list-container .item-card:nth-child(4) { animation-delay: 0.12s; }
+        .list-container .item-card:nth-child(5) { animation-delay: 0.16s; }
+        .list-container .item-card:nth-child(6) { animation-delay: 0.2s; }
+        .list-container .item-card:nth-child(7) { animation-delay: 0.24s; }
+        .list-container .item-card:nth-child(8) { animation-delay: 0.28s; }
+        .list-container .item-card:nth-child(9) { animation-delay: 0.32s; }
+        .list-container .item-card:nth-child(10) { animation-delay: 0.36s; }
+        .list-container .idea-card:nth-child(1) { animation-delay: 0s; }
+        .list-container .idea-card:nth-child(2) { animation-delay: 0.05s; }
+        .list-container .idea-card:nth-child(3) { animation-delay: 0.1s; }
+        .list-container .idea-card:nth-child(4) { animation-delay: 0.15s; }
+        .list-container .idea-card:nth-child(5) { animation-delay: 0.2s; }
+
+        .footer {
+            margin-top: 28px; text-align: center; font-size: 0.75rem; color: var(--text-muted);
+            opacity: 0.4; letter-spacing: 0.5px;
+            animation: titleFadeIn 0.8s 0.5s var(--transition-smooth) both; transition: color 0.6s ease;
+        }
+
+        /* ============================================
+           响应式
+           ============================================ */
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; gap: 20px; }
+            .auth-card { padding: 30px 22px; }
+            .header-bar { flex-direction: column; align-items: stretch; gap: 12px; }
+            .header-right-group { justify-content: space-between; }
+        }
     </style>
 </head>
 <body>
 
+    <!-- 四套主题专属动效背景 -->
+    <div class="theme-deco deco-light" id="deco-light"></div>
+    <div class="theme-deco deco-dark" id="deco-dark"></div>
+    <div class="theme-deco deco-forest" id="deco-forest"></div>
+    <div class="theme-deco deco-pink" id="deco-pink"></div>
+
+    <!-- ==================== 登录页面 ==================== -->
     <div class="auth-shell" id="auth-shell">
         <div class="auth-card">
             <div class="auth-eyebrow">随心工作台</div>
@@ -151,20 +567,23 @@
         </div>
     </div>
 
+    <!-- ==================== 主应用 ==================== -->
     <div class="app-shell hidden" id="app-shell">
         <div class="header-bar">
-            <div class="header-user">
-                <span>已登录：</span>
-                <strong id="user-email">-</strong>
-                <button class="panel-action-btn" onclick="signOut()">退出登录</button>
-            </div>
-            <div class="custom-dropdown" id="theme-dropdown">
-                <div class="dropdown-btn" id="dropdown-title" onclick="toggleDropdown(event)">简约浅灰</div>
-                <div class="dropdown-menu">
-                    <div class="dropdown-item" data-value="light" onclick="selectTheme('light', '简约浅灰')">简约浅灰</div>
-                    <div class="dropdown-item" data-value="cute-pink" onclick="selectTheme('cute-pink', '温柔甜妹')">温柔甜妹</div>
-                    <div class="dropdown-item" data-value="dark" onclick="selectTheme('dark', '优雅深色')">优雅深色</div>
-                    <div class="dropdown-item" data-value="forest" onclick="selectTheme('forest', '复古森林')">复古森林</div>
+            <span class="app-title">✦ 随心工作台</span>
+            <div class="header-right-group">
+                <div class="header-user">
+                    <strong id="user-email">-</strong>
+                    <button class="panel-action-btn" onclick="signOut()">退出</button>
+                </div>
+                <div class="custom-dropdown" id="theme-dropdown">
+                    <div class="dropdown-btn" id="dropdown-title" onclick="toggleDropdown(event)">简约浅灰</div>
+                    <div class="dropdown-menu">
+                        <div class="dropdown-item" data-value="light" onclick="selectTheme('light', '简约浅灰')">简约浅灰</div>
+                        <div class="dropdown-item" data-value="cute-pink" onclick="selectTheme('cute-pink', '温柔甜妹')">温柔甜妹</div>
+                        <div class="dropdown-item" data-value="dark" onclick="selectTheme('dark', '优雅深色')">优雅深色</div>
+                        <div class="dropdown-item" data-value="forest" onclick="selectTheme('forest', '复古森林')">复古森林</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -175,12 +594,10 @@
                     <span id="todo-panel-title">每日待办</span>
                     <button class="panel-action-btn" id="todo-trash-toggle" onclick="toggleTodoTrash()">回收站</button>
                 </h2>
-                
                 <div class="input-group" id="todo-input-zone">
                     <input type="text" id="todo-input" placeholder="输入今天的任务..." onkeydown="if(event.key==='Enter') addTodo()">
                     <button class="main-btn todo-btn" onclick="addTodo()">添加</button>
                 </div>
-                
                 <div class="list-container" id="todo-list"></div>
             </div>
 
@@ -189,19 +606,21 @@
                     <span id="idea-panel-title">灵感闪现</span>
                     <button class="panel-action-btn" id="idea-trash-toggle" onclick="toggleIdeaTrash()">回收站</button>
                 </h2>
-                
                 <div class="input-group" id="idea-input-zone">
                     <textarea class="unified-input" id="idea-input" placeholder="捕捉瞬间的想法... Ctrl+Enter 提交"></textarea>
                     <button class="main-btn idea-btn" onclick="addIdea()">记录</button>
                 </div>
-                
                 <div class="list-container" id="idea-list"></div>
             </div>
         </div>
+
+        <div class="footer">随心工作台 · 让想法自由流淌</div>
     </div>
 
     <script>
-        // 🟢 核心数据存储 (活动数据走云端 Supabase，回收站数据保留在本地防止增加数据库负担)
+        /* ============================================
+           核心状态
+           ============================================ */
         let todos = [];
         let ideas = [];
         let todoTrash = JSON.parse(localStorage.getItem('my_todo_trash')) || [];
@@ -211,16 +630,23 @@
         let isAuthLoginMode = true;
 
         const themeNamesMap = { 'light': '简约浅灰', 'cute-pink': '温柔甜妹', 'dark': '优雅深色', 'forest': '复古森林' };
-        let isTodoTrashView = false; let isIdeaTrashView = false;
-        let draggedTodoId = null; let isEditingMode = false; 
+        let isTodoTrashView = false;
+        let isIdeaTrashView = false;
+        let draggedTodoId = null;
+        let isEditingMode = false;
 
         const dragPlaceholder = document.createElement('div');
         dragPlaceholder.className = 'drag-placeholder';
 
+        /* ============================================
+           初始化
+           ============================================ */
         window.onload = async function() {
             initTheme(currentTheme);
             setupDragAndDrop();
             setupGlobalEvents();
+            initDecorations();
+            setupRippleEffect();
             syncAuthCopy();
 
             await handleAuthCallback();
@@ -239,7 +665,6 @@
                     dropdown.classList.remove('active');
                 }
             });
-
             const ideaInput = document.getElementById('idea-input');
             if (ideaInput) {
                 ideaInput.addEventListener('keydown', function(e) {
@@ -248,6 +673,83 @@
             }
         }
 
+        /* ============================================
+           装饰粒子
+           ============================================ */
+        function initDecorations() {
+            const lightBox = document.getElementById('deco-light');
+            for (let i = 0; i < 24; i++) {
+                const p = document.createElement('div');
+                p.className = 'dust-mote';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.top = (10 + Math.random() * 85) + '%';
+                const s = 3 + Math.random() * 5;
+                p.style.width = p.style.height = s + 'px';
+                const hue = Math.random() > 0.5 ? '210, 70%, 62%' : '28, 80%, 62%';
+                const peakA = 0.45 + Math.random() * 0.25;
+                const midA = 0.1 + Math.random() * 0.12;
+                p.style.background = `radial-gradient(circle, hsla(${hue}, ${peakA}), hsla(${hue}, 0.05))`;
+                p.style.setProperty('--peak', peakA);
+                p.style.setProperty('--mid', midA);
+                p.style.setProperty('--dx', (Math.random() * 60 - 30) + 'px');
+                p.style.setProperty('--dy', -(30 + Math.random() * 60) + 'px');
+                p.style.animationDuration = (10 + Math.random() * 14) + 's';
+                p.style.animationDelay = (Math.random() * 12) + 's';
+                lightBox.appendChild(p);
+            }
+            const darkBox = document.getElementById('deco-dark');
+            for (let i = 0; i < 60; i++) {
+                const s = document.createElement('div');
+                s.className = 'star';
+                s.style.left = Math.random() * 100 + '%';
+                s.style.top = Math.random() * 100 + '%';
+                s.style.setProperty('--dur', (2 + Math.random() * 4) + 's');
+                s.style.setProperty('--max-opacity', (0.3 + Math.random() * 0.5));
+                s.style.animationDelay = (Math.random() * 4) + 's';
+                s.style.width = s.style.height = (1 + Math.random() * 2) + 'px';
+                darkBox.appendChild(s);
+            }
+            const forestBox = document.getElementById('deco-forest');
+            for (let i = 0; i < 22; i++) {
+                const f = document.createElement('div');
+                f.className = 'firefly';
+                f.style.left = Math.random() * 100 + '%';
+                f.style.top = Math.random() * 100 + '%';
+                const s = 2 + Math.random() * 2.5;
+                f.style.width = f.style.height = s + 'px';
+                f.style.setProperty('--dx', (Math.random() * 80 - 40) + 'px');
+                f.style.setProperty('--dy', (Math.random() * 80 - 40) + 'px');
+                f.style.animationDuration = (7 + Math.random() * 10) + 's';
+                f.style.animationDelay = (Math.random() * 10) + 's';
+                forestBox.appendChild(f);
+            }
+            const pinkBox = document.getElementById('deco-pink');
+            for (let i = 0; i < 32; i++) {
+                const sp = document.createElement('div');
+                sp.className = 'sparkle';
+                sp.style.left = Math.random() * 100 + '%';
+                sp.style.top = Math.random() * 100 + '%';
+                const s = 1.5 + Math.random() * 3;
+                sp.style.width = sp.style.height = s + 'px';
+                sp.style.setProperty('--sdur', (3 + Math.random() * 6) + 's');
+                sp.style.animationDelay = (Math.random() * 8) + 's';
+                pinkBox.appendChild(sp);
+            }
+        }
+
+        function setupRippleEffect() {
+            document.querySelectorAll('button.main-btn').forEach(btn => {
+                btn.addEventListener('mouseenter', function(e) {
+                    const rect = this.getBoundingClientRect();
+                    this.style.setProperty('--ripple-x', ((e.clientX - rect.left) / rect.width * 100) + '%');
+                    this.style.setProperty('--ripple-y', ((e.clientY - rect.top) / rect.height * 100) + '%');
+                });
+            });
+        }
+
+        /* ============================================
+           认证逻辑
+           ============================================ */
         function handleAuthState(user) {
             currentUser = user;
             const authShell = document.getElementById('auth-shell');
@@ -264,10 +766,8 @@
                 authShell.classList.remove('hidden');
                 appShell.classList.add('hidden');
                 userEmail.innerText = '-';
-                todos = [];
-                ideas = [];
-                renderTodos();
-                renderIdeas();
+                todos = []; ideas = [];
+                renderTodos(); renderIdeas();
             }
         }
 
@@ -285,10 +785,7 @@
             setAuthMessage('');
         }
 
-        function toggleAuthMode() {
-            isAuthLoginMode = !isAuthLoginMode;
-            syncAuthCopy();
-        }
+        function toggleAuthMode() { isAuthLoginMode = !isAuthLoginMode; syncAuthCopy(); }
 
         function setAuthMessage(message, type = '') {
             const el = document.getElementById('auth-message');
@@ -297,9 +794,10 @@
         }
 
         function getAuthFormValue() {
-            const email = document.getElementById('auth-email').value.trim();
-            const password = document.getElementById('auth-password').value;
-            return { email, password };
+            return {
+                email: document.getElementById('auth-email').value.trim(),
+                password: document.getElementById('auth-password').value
+            };
         }
 
         function getRedirectUrl() {
@@ -316,11 +814,7 @@
             const authType = url.searchParams.get('type');
             const errorDescription = url.searchParams.get('error_description');
 
-            if (errorDescription) {
-                setAuthMessage(decodeURIComponent(errorDescription), 'error');
-                return;
-            }
-
+            if (errorDescription) { setAuthMessage(decodeURIComponent(errorDescription), 'error'); return; }
             if (!code && !tokenHash) return;
 
             let authError = null;
@@ -328,190 +822,212 @@
                 const result = await supabaseClient.auth.exchangeCodeForSession(code);
                 authError = result.error;
             } else {
-                const result = await supabaseClient.auth.verifyOtp({
-                    token_hash: tokenHash,
-                    type: authType || 'email'
-                });
+                const result = await supabaseClient.auth.verifyOtp({ token_hash: tokenHash, type: authType || 'email' });
                 authError = result.error;
             }
 
-            if (authError) {
-                setAuthMessage(authError.message || '邮箱确认失败，请重试。', 'error');
-                return;
-            }
+            if (authError) { setAuthMessage(authError.message || '邮箱确认失败，请重试。', 'error'); return; }
 
-            url.searchParams.delete('code');
-            url.searchParams.delete('token_hash');
-            url.searchParams.delete('state');
-            url.searchParams.delete('type');
+            url.searchParams.delete('code'); url.searchParams.delete('token_hash');
+            url.searchParams.delete('state'); url.searchParams.delete('type');
             window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
             setAuthMessage('邮箱已确认，正在进入工作台...', 'success');
         }
 
         async function handleAuthSubmit() {
             const { email, password } = getAuthFormValue();
-            if (!email || !password) {
-                setAuthMessage('请先输入邮箱和密码。', 'error');
-                return;
-            }
-
+            if (!email || !password) { setAuthMessage('请先输入邮箱和密码。', 'error'); return; }
             setAuthMessage(isAuthLoginMode ? '正在登录...' : '正在创建账号...');
 
             if (isAuthLoginMode) {
                 const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-                if (error) {
-                    setAuthMessage(error.message || '登录失败，请稍后再试。', 'error');
-                    return;
-                }
+                if (error) { setAuthMessage(error.message || '登录失败，请稍后再试。', 'error'); return; }
                 setAuthMessage('登录成功。', 'success');
             } else {
-                const { error } = await supabaseClient.auth.signUp({
-                    email,
-                    password,
-                    options: { emailRedirectTo: getRedirectUrl() }
-                });
-                if (error) {
-                    setAuthMessage(error.message || '注册失败，请稍后再试。', 'error');
-                    return;
-                }
+                const { error } = await supabaseClient.auth.signUp({ email, password, options: { emailRedirectTo: getRedirectUrl() } });
+                if (error) { setAuthMessage(error.message || '注册失败，请稍后再试。', 'error'); return; }
                 setAuthMessage('已发送确认邮件，请前往邮箱完成确认。确认后会自动回到这里。', 'success');
             }
         }
 
         async function sendMagicLink() {
             const { email } = getAuthFormValue();
-            if (!email) {
-                setAuthMessage('先输入邮箱，再发送登录链接。', 'error');
-                return;
-            }
-
+            if (!email) { setAuthMessage('先输入邮箱，再发送登录链接。', 'error'); return; }
             setAuthMessage('正在发送登录链接...');
-            const { error } = await supabaseClient.auth.signInWithOtp({
-                email,
-                options: { emailRedirectTo: getRedirectUrl() }
-            });
-            if (error) {
-                setAuthMessage(error.message || '发送失败，请稍后再试。', 'error');
-                return;
-            }
+            const { error } = await supabaseClient.auth.signInWithOtp({ email, options: { emailRedirectTo: getRedirectUrl() } });
+            if (error) { setAuthMessage(error.message || '发送失败，请稍后再试。', 'error'); return; }
             setAuthMessage('已发送登录链接，请打开邮箱点击链接后自动返回。', 'success');
         }
 
         async function resendConfirmation() {
             const { email } = getAuthFormValue();
-            if (!email) {
-                setAuthMessage('先输入邮箱，再重新发送确认邮件。', 'error');
-                return;
-            }
-
+            if (!email) { setAuthMessage('先输入邮箱，再重新发送确认邮件。', 'error'); return; }
             setAuthMessage('正在重新发送确认邮件...');
-            const { error } = await supabaseClient.auth.resend({
-                type: 'signup',
-                email,
-                options: { emailRedirectTo: getRedirectUrl() }
-            });
-            if (error) {
-                setAuthMessage(error.message || '发送失败，请稍后再试。', 'error');
-                return;
-            }
+            const { error } = await supabaseClient.auth.resend({ type: 'signup', email, options: { emailRedirectTo: getRedirectUrl() } });
+            if (error) { setAuthMessage(error.message || '发送失败，请稍后再试。', 'error'); return; }
             setAuthMessage('已重新发送确认邮件，请检查邮箱。', 'success');
         }
 
         async function signOut() {
             const { error } = await supabaseClient.auth.signOut();
-            if (error) {
-                setAuthMessage(error.message || '退出失败，请稍后再试。', 'error');
-                return;
-            }
+            if (error) { setAuthMessage(error.message || '退出失败，请稍后再试。', 'error'); return; }
             document.getElementById('auth-password').value = '';
             setAuthMessage('你已退出登录。', 'success');
         }
 
-        // 🟢 从 Supabase 云端拉取最新数据
+        /* ============================================
+           Supabase 数据操作
+           ============================================ */
         async function loadDataFromSupabase() {
             if (!currentUser) return;
-            // 拉取待办：按完成状态排序(未完成在前)，再按拖拽序号(order_index)排序
             const { data: todoData } = await supabaseClient.from('todos')
                 .select('*')
                 .order('is_completed', { ascending: true })
                 .order('order_index', { ascending: true });
-            
-            // 拉取灵感：按创建时间倒序排列(最新的在最上)
             const { data: ideaData } = await supabaseClient.from('ideas')
                 .select('*')
                 .order('created_at', { ascending: false });
-
             if (todoData) todos = todoData;
             if (ideaData) ideas = ideaData;
-            
             renderTodos();
             renderIdeas();
         }
 
-        // --- 零抖动的实体占位符拖拽算法 (已对接云端更新) ---
+        async function addTodo() {
+            const input = document.getElementById('todo-input');
+            const text = input.value.trim();
+            if (!text) return;
+            await supabaseClient.from('todos').insert([{ text: text, is_completed: false, order_index: todos.length }]);
+            input.value = '';
+            loadDataFromSupabase();
+        }
+
+        async function toggleTodo(id, currentStatus) {
+            await supabaseClient.from('todos').update({ is_completed: !currentStatus }).eq('id', id);
+            loadDataFromSupabase();
+        }
+
+        async function trashTodo(id) {
+            const target = todos.find(t => t.id === id);
+            if (target) {
+                todoTrash.push({ id: target.id, text: target.text, time: formatTime(target.created_at), is_completed: target.is_completed });
+                localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
+                await supabaseClient.from('todos').delete().eq('id', id);
+                loadDataFromSupabase();
+            }
+        }
+
+        async function restoreTodo(id) {
+            const target = todoTrash.find(t => t.id === id);
+            if (target) {
+                await supabaseClient.from('todos').insert([{ text: target.text, is_completed: target.is_completed, order_index: todos.length }]);
+                todoTrash = todoTrash.filter(t => t.id !== id);
+                localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
+                loadDataFromSupabase();
+            }
+        }
+
+        function burnTodo(id) {
+            todoTrash = todoTrash.filter(t => t.id !== id);
+            localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
+            renderTodos();
+        }
+
+        async function addIdea() {
+            const input = document.getElementById('idea-input');
+            const text = input.value.trim();
+            if (!text) return;
+            await supabaseClient.from('ideas').insert([{ text: text }]);
+            input.value = '';
+            loadDataFromSupabase();
+        }
+
+        async function trashIdea(id) {
+            const target = ideas.find(i => i.id === id);
+            if (target) {
+                ideaTrash.push({ id: target.id, text: target.text, time: formatTime(target.created_at) });
+                localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
+                await supabaseClient.from('ideas').delete().eq('id', id);
+                loadDataFromSupabase();
+            }
+        }
+
+        async function restoreIdea(id) {
+            const target = ideaTrash.find(i => i.id === id);
+            if (target) {
+                await supabaseClient.from('ideas').insert([{ text: target.text }]);
+                ideaTrash = ideaTrash.filter(i => i.id !== id);
+                localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
+                loadDataFromSupabase();
+            }
+        }
+
+        function burnIdea(id) {
+            ideaTrash = ideaTrash.filter(i => i.id !== id);
+            localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
+            renderIdeas();
+        }
+
+        /* ============================================
+           拖拽排序（更新 Supabase order_index）
+           ============================================ */
         function setupDragAndDrop() {
             const listEl = document.getElementById('todo-list');
 
             listEl.addEventListener('dragstart', (e) => {
                 const card = e.target.closest('.todo-item');
-                if(!card || isTodoTrashView || isEditingMode) { e.preventDefault(); return; }
+                if (!card || isTodoTrashView || isEditingMode) { e.preventDefault(); return; }
                 draggedTodoId = parseInt(card.dataset.id);
                 setTimeout(() => { card.style.display = 'none'; card.parentNode.insertBefore(dragPlaceholder, card); }, 0);
             });
 
             listEl.addEventListener('dragover', (e) => {
-                e.preventDefault(); 
+                e.preventDefault();
                 const targetCard = e.target.closest('.todo-item');
                 if (targetCard && targetCard.dataset.id != draggedTodoId && !isTodoTrashView) {
                     const rect = targetCard.getBoundingClientRect();
                     const midY = rect.top + rect.height / 2;
-                    if (e.clientY < midY) {
-                        targetCard.parentNode.insertBefore(dragPlaceholder, targetCard);
-                    } else {
-                        targetCard.parentNode.insertBefore(dragPlaceholder, targetCard.nextSibling);
-                    }
+                    if (e.clientY < midY) targetCard.parentNode.insertBefore(dragPlaceholder, targetCard);
+                    else targetCard.parentNode.insertBefore(dragPlaceholder, targetCard.nextSibling);
                 }
             });
 
             listEl.addEventListener('drop', (e) => {
                 e.preventDefault();
-                if(isTodoTrashView || !draggedTodoId) return;
+                if (isTodoTrashView || !draggedTodoId) return;
                 const draggedElement = document.querySelector(`[data-id="${draggedTodoId}"]`);
-                if(draggedElement && dragPlaceholder.parentNode) {
-                    dragPlaceholder.parentNode.insertBefore(draggedElement, dragPlaceholder);
-                }
+                if (draggedElement && dragPlaceholder.parentNode) dragPlaceholder.parentNode.insertBefore(draggedElement, dragPlaceholder);
             });
 
-            listEl.addEventListener('dragend', async (e) => {
+            listEl.addEventListener('dragend', async () => {
                 if (dragPlaceholder.parentNode) dragPlaceholder.parentNode.removeChild(dragPlaceholder);
                 const draggedElement = document.querySelector(`[data-id="${draggedTodoId}"]`);
                 if (draggedElement) draggedElement.style.display = '';
 
-                // 🟢 拖拽结束后，获取新的排序索引并批量更新至 Supabase
                 const updates = [];
-                const currentDOMElements = document.querySelectorAll('#todo-list .todo-item');
-                currentDOMElements.forEach((el, index) => {
+                document.querySelectorAll('#todo-list .todo-item').forEach((el, index) => {
                     const id = parseInt(el.dataset.id);
                     updates.push(supabaseClient.from('todos').update({ order_index: index }).eq('id', id));
                 });
-                
                 await Promise.all(updates);
-                loadDataFromSupabase(); // 重新拉取以确保一致性
+                loadDataFromSupabase();
                 draggedTodoId = null;
             });
         }
 
-        // --- 👑 就地双击编辑逻辑 (对接云端) ---
+        /* ============================================
+           就地双击编辑（对接 Supabase）
+           ============================================ */
         function startEditTodo(id, textSpan) {
-            if(isTodoTrashView) return; 
+            if (isTodoTrashView) return;
             isEditingMode = true;
-            const itemCard = textSpan.closest('.todo-item');
-            if(itemCard) itemCard.setAttribute('draggable', 'false');
+            const card = textSpan.closest('.todo-item');
+            if (card) card.setAttribute('draggable', 'false');
 
             const currentText = textSpan.innerText;
             const input = document.createElement('input');
             input.type = 'text'; input.className = 'inline-edit-input'; input.value = currentText;
-            textSpan.replaceWith(input); input.focus();
+            textSpan.replaceWith(input); input.focus(); input.select();
 
             const finishEdit = async () => {
                 if (!isEditingMode) return;
@@ -531,7 +1047,7 @@
         }
 
         function startEditIdea(id, textDiv) {
-            if(isIdeaTrashView) return;
+            if (isIdeaTrashView) return;
             isEditingMode = true;
             const currentText = textDiv.innerText;
             const textarea = document.createElement('textarea');
@@ -555,12 +1071,14 @@
             });
         }
 
-        // --- UI 及其他控制 ---
+        /* ============================================
+           UI 控制
+           ============================================ */
         function toggleDropdown(event) { event.stopPropagation(); document.getElementById('theme-dropdown').classList.toggle('active'); }
         function initTheme(themeName) { document.documentElement.setAttribute('data-theme', themeName); document.getElementById('dropdown-title').innerText = themeNamesMap[themeName] || '简约浅灰'; updateDropdownHighlight(themeName); }
         function selectTheme(themeName, themeText) { document.documentElement.setAttribute('data-theme', themeName); document.getElementById('dropdown-title').innerText = themeText; localStorage.setItem('my_theme', themeName); updateDropdownHighlight(themeName); }
-        function updateDropdownHighlight(themeName) { const items = document.querySelectorAll('.dropdown-item'); items.forEach(item => { if(item.getAttribute('data-value') === themeName) { item.classList.add('selected'); } else { item.classList.remove('selected'); } }); }
-        
+        function updateDropdownHighlight(themeName) { document.querySelectorAll('.dropdown-item').forEach(item => { item.classList.toggle('selected', item.getAttribute('data-value') === themeName); }); }
+
         function formatTime(timestampString) {
             if (!timestampString) return '未知';
             const date = new Date(timestampString);
@@ -570,96 +1088,59 @@
         function triggerViewTransition(containerId, renderFn) {
             const container = document.getElementById(containerId);
             container.classList.add('view-changing');
-            setTimeout(() => { renderFn(); container.classList.remove('view-changing'); }, 180);
+            setTimeout(() => { renderFn(); container.classList.remove('view-changing'); }, 200);
         }
 
-        // --- 渲染模块 ---
+        /* ============================================
+           渲染：待办
+           ============================================ */
         function renderTodos() {
             const list = document.getElementById('todo-list');
             list.innerHTML = '';
 
             if (isTodoTrashView) {
-                if(todoTrash.length === 0) { list.innerHTML = '<div class="empty-tip">回收站空空如也</div>'; return; }
+                if (!todoTrash.length) {
+                    list.innerHTML = '<div class="empty-tip"><span class="empty-icon">🗑️</span>回收站空空如也</div>';
+                    return;
+                }
                 todoTrash.forEach(item => {
                     const el = document.createElement('div'); el.className = 'item-card';
                     el.innerHTML = `
                         <div class="todo-info-wrapper">
-                            <span style="color: var(--text-muted); font-size:0.95rem;">${escapeHtml(item.text)}</span>
+                            <span style="color:var(--text-muted);font-size:0.92rem;">${escapeHtml(item.text)}</span>
                             <span class="timestamp">创建于 ${item.time || '未知'}</span>
                         </div>
                         <div>
                             <button class="action-text-btn restore-btn" onclick="restoreTodo(${item.id})">还原</button>
                             <button class="action-text-btn" onclick="burnTodo(${item.id})">粉碎</button>
-                        </div>
-                    `;
+                        </div>`;
                     list.appendChild(el);
                 });
             } else {
-                if(todos.length === 0) { list.innerHTML = '<div class="empty-tip">今天还没有安排任务</div>'; return; }
+                if (!todos.length) {
+                    list.innerHTML = '<div class="empty-tip"><span class="empty-icon">📝</span>今天还没有安排任务</div>';
+                    return;
+                }
                 todos.forEach((todo, index) => {
                     const el = document.createElement('div');
                     el.className = `item-card todo-item ${todo.is_completed ? 'completed' : ''}`;
-                    el.setAttribute('draggable', 'true'); el.dataset.id = todo.id;
+                    el.setAttribute('draggable', 'true');
+                    el.dataset.id = todo.id;
                     el.innerHTML = `
                         <div class="todo-content">
                             <input type="checkbox" ${todo.is_completed ? 'checked' : ''} onclick="toggleTodo(${todo.id}, ${todo.is_completed})">
                             <div class="todo-info-wrapper">
                                 <div class="todo-text-container">
-                                    <span class="todo-seq">${index + 1}.</span>
+                                    <span class="todo-seq">${index + 1}</span>
                                     <span class="todo-text" ondblclick="startEditTodo(${todo.id}, this)">${escapeHtml(todo.text)}</span>
                                 </div>
                                 <span class="timestamp">创建于 ${formatTime(todo.created_at)}</span>
                             </div>
                         </div>
-                        <button class="action-text-btn" onclick="trashTodo(${todo.id})" style="position:relative; z-index:2;">删除</button>
-                    `;
+                        <button class="action-text-btn" onclick="trashTodo(${todo.id})" style="position:relative;z-index:2;">删除</button>`;
                     list.appendChild(el);
                 });
             }
-        }
-
-        // 🟢 Supabase 写入：添加任务
-        async function addTodo() {
-            const input = document.getElementById('todo-input');
-            const text = input.value.trim();
-            if (!text) return;
-            await supabaseClient.from('todos').insert([{ text: text, is_completed: false, order_index: todos.length }]);
-            input.value = '';
-            loadDataFromSupabase();
-        }
-
-        // 🟢 Supabase 写入：切换完成状态
-        async function toggleTodo(id, currentStatus) {
-            await supabaseClient.from('todos').update({ is_completed: !currentStatus }).eq('id', id);
-            loadDataFromSupabase();
-        }
-
-        // 🟢 Supabase -> 本地回收站：删除任务
-        async function trashTodo(id) {
-            const target = todos.find(t => t.id === id);
-            if(target) {
-                todoTrash.push({ id: target.id, text: target.text, time: formatTime(target.created_at), is_completed: target.is_completed });
-                localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
-                await supabaseClient.from('todos').delete().eq('id', id);
-                loadDataFromSupabase();
-            }
-        }
-
-        // 🟢 本地回收站 -> Supabase：还原任务
-        async function restoreTodo(id) {
-            const target = todoTrash.find(t => t.id === id);
-            if(target) {
-                await supabaseClient.from('todos').insert([{ text: target.text, is_completed: target.is_completed, order_index: todos.length }]);
-                todoTrash = todoTrash.filter(t => t.id !== id);
-                localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
-                loadDataFromSupabase();
-            }
-        }
-
-        function burnTodo(id) {
-            todoTrash = todoTrash.filter(t => t.id !== id);
-            localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
-            renderTodos();
         }
 
         function toggleTodoTrash() {
@@ -670,11 +1151,18 @@
             triggerViewTransition('todo-list', renderTodos);
         }
 
-        // --- 灵感渲染 ---
+        /* ============================================
+           渲染：灵感
+           ============================================ */
         function renderIdeas() {
-            const list = document.getElementById('idea-list'); list.innerHTML = '';
+            const list = document.getElementById('idea-list');
+            list.innerHTML = '';
+
             if (isIdeaTrashView) {
-                if(ideaTrash.length === 0) { list.innerHTML = '<div class="empty-tip">回收站空空如也</div>'; return; }
+                if (!ideaTrash.length) {
+                    list.innerHTML = '<div class="empty-tip"><span class="empty-icon">🗑️</span>回收站空空如也</div>';
+                    return;
+                }
                 ideaTrash.forEach(item => {
                     const el = document.createElement('div'); el.className = 'idea-card'; el.style.opacity = '0.6';
                     el.innerHTML = `
@@ -685,12 +1173,14 @@
                                 <button class="action-text-btn" onclick="burnIdea(${item.id})">粉碎</button>
                             </div>
                         </div>
-                        <div class="idea-text">${escapeHtml(item.text)}</div>
-                    `;
+                        <div class="idea-text">${escapeHtml(item.text)}</div>`;
                     list.appendChild(el);
                 });
             } else {
-                if(ideas.length === 0) { list.innerHTML = '<div class="empty-tip">捕捉一瞬间的火花</div>'; return; }
+                if (!ideas.length) {
+                    list.innerHTML = '<div class="empty-tip"><span class="empty-icon">💡</span>捕捉一瞬间的火花</div>';
+                    return;
+                }
                 ideas.forEach(idea => {
                     const el = document.createElement('div'); el.className = 'idea-card';
                     el.innerHTML = `
@@ -698,46 +1188,10 @@
                             <span class="timestamp">记录于 ${formatTime(idea.created_at)}</span>
                             <button class="action-text-btn" onclick="trashIdea(${idea.id})">删除</button>
                         </div>
-                        <div class="idea-text" ondblclick="startEditIdea(${idea.id}, this)">${escapeHtml(idea.text)}</div>
-                    `;
+                        <div class="idea-text" ondblclick="startEditIdea(${idea.id}, this)">${escapeHtml(idea.text)}</div>`;
                     list.appendChild(el);
                 });
             }
-        }
-
-        // 🟢 Supabase 写入：添加灵感
-        async function addIdea() {
-            const input = document.getElementById('idea-input'); const text = input.value.trim(); if (!text) return;
-            await supabaseClient.from('ideas').insert([{ text: text }]);
-            input.value = ''; loadDataFromSupabase();
-        }
-
-        // 🟢 Supabase -> 本地回收站：删除灵感
-        async function trashIdea(id) {
-            const target = ideas.find(i => i.id === id);
-            if(target) {
-                ideaTrash.push({ id: target.id, text: target.text, time: formatTime(target.created_at) });
-                localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
-                await supabaseClient.from('ideas').delete().eq('id', id);
-                loadDataFromSupabase();
-            }
-        }
-
-        // 🟢 本地回收站 -> Supabase：还原灵感
-        async function restoreIdea(id) {
-            const target = ideaTrash.find(i => i.id === id);
-            if(target) {
-                await supabaseClient.from('ideas').insert([{ text: target.text }]);
-                ideaTrash = ideaTrash.filter(i => i.id !== id);
-                localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
-                loadDataFromSupabase();
-            }
-        }
-
-        function burnIdea(id) {
-            ideaTrash = ideaTrash.filter(i => i.id !== id);
-            localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
-            renderIdeas();
         }
 
         function toggleIdeaTrash() {
@@ -748,11 +1202,13 @@
             triggerViewTransition('idea-list', renderIdeas);
         }
 
+        /* ============================================
+           工具函数
+           ============================================ */
         function escapeHtml(text) {
-            const map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
             return text.replace(/[&<>"']/g, function(m) { return map[m]; });
         }
     </script>
 </body>
 </html>
-
