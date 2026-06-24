@@ -390,7 +390,7 @@
                     <div class="dropdown-btn" id="dropdown-title" onclick="toggleDropdown(event)">简约浅灰</div>
                     <div class="dropdown-menu">
                         <div class="dropdown-item" data-value="light" onclick="selectTheme('light', '简约浅灰')">简约浅灰</div>
-                        <div class="dropdown-item" data-value="cute-pink" onclick="selectTheme('cute-pink', '温柔甜妹')">温柔甜妹</div>
+                        <div class="dropdown-item" data-value="cute-pink" onclick="selectTheme('cute-pink', '温柔甜粉')">温柔甜粉</div>
                         <div class="dropdown-item" data-value="dark" onclick="selectTheme('dark', '优雅深色')">优雅深色</div>
                         <div class="dropdown-item" data-value="forest" onclick="selectTheme('forest', '复古森林')">复古森林</div>
                     </div>
@@ -405,7 +405,7 @@
                     <button class="panel-action-btn" id="todo-trash-toggle" onclick="toggleTodoTrash()">回收站</button>
                 </h2>
                 <div class="input-group" id="todo-input-zone">
-                    <input type="text" id="todo-input" placeholder="输入今天的任务..." onkeydown="if(event.key==='Enter') addTodo()">
+                    <input type="text" id="todo-input" placeholder="输入今天的任务.." onkeydown="if(event.key==='Enter') addTodo()">
                     <button class="main-btn todo-btn" onclick="addTodo()">添加</button>
                 </div>
                 <div class="list-container" id="todo-list"></div>
@@ -417,7 +417,7 @@
                     <button class="panel-action-btn" id="idea-trash-toggle" onclick="toggleIdeaTrash()">回收站</button>
                 </h2>
                 <div class="input-group" id="idea-input-zone">
-                    <textarea class="unified-input" id="idea-input" placeholder="捕捉瞬间的想法... Ctrl+Enter 提交"></textarea>
+                    <textarea class="unified-input" id="idea-input" placeholder="捕捉瞬间的想法.. Ctrl+Enter 提交"></textarea>
                     <button class="main-btn idea-btn" onclick="addIdea()">记录</button>
                 </div>
                 <div class="list-container" id="idea-list"></div>
@@ -435,9 +435,10 @@
         let currentTheme = localStorage.getItem('my_theme') || 'light';
         let currentUser = null;
         let isAuthLoginMode = true;
-        const themeNamesMap = { 'light': '简约浅灰', 'cute-pink': '温柔甜妹', 'dark': '优雅深色', 'forest': '复古森林' };
+        const themeNamesMap = { 'light': '简约浅灰', 'cute-pink': '温柔甜粉', 'dark': '优雅深色', 'forest': '复古森林' };
         let isTodoTrashView = false, isIdeaTrashView = false;
         let draggedTodoId = null, isEditingMode = false;
+        const AUTH_RETURN_URL_KEY = 'my_auth_return_url';
         // 【修复 5】去重标记，防止 onAuthStateChange 重复触发
         let lastAuthUserId = null;
         const dragPlaceholder = document.createElement('div');
@@ -578,28 +579,75 @@
             el.innerText = msg;
         }
 
+        function normalizeAppPath(pathname) {
+            const path = pathname || '/';
+            if (/\.[a-z0-9]+$/i.test(path) || path.endsWith('/')) return path;
+            return `${path}/`;
+        }
+
+        function getCanonicalAppUrl() {
+            const current = new URL(window.location.href);
+            current.search = '';
+            current.hash = '';
+            current.pathname = normalizeAppPath(current.pathname);
+            return current.toString();
+        }
+
         function getRedirectUrl() {
             if (window.location.origin && window.location.origin !== 'null') {
-                return `${window.location.origin}${window.location.pathname}`;
+                return getCanonicalAppUrl();
             }
             return window.location.href.split('?')[0].split('#')[0];
         }
 
-        // 【修复 1】回调处理更健壮，增加 try-catch 和详细日志
+        function rememberReturnUrl() {
+            try {
+                localStorage.setItem(AUTH_RETURN_URL_KEY, getRedirectUrl());
+            } catch (err) {
+                console.warn('记录跳转地址失败:', err);
+            }
+        }
+
+        function consumeReturnUrl() {
+            try {
+                const saved = localStorage.getItem(AUTH_RETURN_URL_KEY);
+                localStorage.removeItem(AUTH_RETURN_URL_KEY);
+                return saved || getRedirectUrl();
+            } catch (err) {
+                console.warn('读取跳转地址失败:', err);
+                return getRedirectUrl();
+            }
+        }
+
+        function getHashParams(hash) {
+            const raw = hash.startsWith('#') ? hash.slice(1) : hash;
+            return new URLSearchParams(raw);
+        }
+
+        // 回调处理更健壮，增加 try-catch 和详细日志
         async function handleAuthCallback() {
             const url = new URL(window.location.href);
-            const code = url.searchParams.get('code');
-            const tokenHash = url.searchParams.get('token_hash');
-            const authType = url.searchParams.get('type');
-            const errorDesc = url.searchParams.get('error_description');
+            const hashParams = getHashParams(url.hash);
+            const code = url.searchParams.get('code') || hashParams.get('code');
+            const tokenHash = url.searchParams.get('token_hash') || hashParams.get('token_hash');
+            const authType = url.searchParams.get('type') || hashParams.get('type');
+            const errorDesc = url.searchParams.get('error_description') || hashParams.get('error_description');
+            const accessToken = hashParams.get('access_token');
+            const refreshToken = hashParams.get('refresh_token');
 
             if (errorDesc) { setAuthMessage(decodeURIComponent(errorDesc), 'error'); return; }
-            if (!code && !tokenHash) return;
+            if (!code && !tokenHash && !(accessToken && refreshToken)) return;
 
             try {
                 let authError = null;
                 if (code) {
                     const r = await supabaseClient.auth.exchangeCodeForSession(code);
+                    authError = r.error;
+                } else if (accessToken && refreshToken) {
+                    const r = await supabaseClient.auth.setSession({
+                        access_token: accessToken,
+                        refresh_token: refreshToken
+                    });
                     authError = r.error;
                 } else if (tokenHash) {
                     // type 可能是 signup / magiclink / recovery 等
@@ -616,8 +664,18 @@
                     return;
                 }
 
-                // 清理 URL 参数
-                ['code','token_hash','state','type'].forEach(p => url.searchParams.delete(p));
+                ['code','token_hash','state','type','error_description'].forEach(p => url.searchParams.delete(p));
+                ['access_token','refresh_token','expires_at','expires_in','token_type','type'].forEach(p => hashParams.delete(p));
+
+                const returnUrl = consumeReturnUrl();
+                const currentWithoutHash = window.location.href.split('#')[0];
+                if (returnUrl && returnUrl !== currentWithoutHash) {
+                    window.location.replace(returnUrl);
+                    return;
+                }
+
+                url.pathname = normalizeAppPath(url.pathname);
+                url.hash = hashParams.toString() ? `#${hashParams.toString()}` : '';
                 window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
                 setAuthMessage('已确认，欢迎回来！', 'success');
             } catch (err) {
@@ -631,7 +689,8 @@
             const email = document.getElementById('auth-email').value.trim();
             if (isAuthLoginMode) {
                 if (!email) { setAuthMessage('请输入邮箱地址。', 'error'); return; }
-                setAuthMessage('正在发送登录链接...');
+                setAuthMessage('正在发送登录链接..');
+                rememberReturnUrl();
                 const { error } = await supabaseClient.auth.signInWithOtp({
                     email,
                     options: { emailRedirectTo: getRedirectUrl() }
@@ -644,6 +703,7 @@
                 if (!password || password.length < 6) { setAuthMessage('密码至少需要 6 位。', 'error'); return; }
                 setAuthMessage('正在创建账号...');
                 try {
+                    rememberReturnUrl();
                     const { data, error } = await supabaseClient.auth.signUp({
                         email,
                         password,
@@ -731,7 +791,7 @@
                 todo.is_completed = prev;
                 sortTodos();
                 renderTodos();
-                console.error('切换待办状态失败:', error);
+                console.error('切换待办状态失败', error);
             }
         }
 
@@ -1012,7 +1072,7 @@
                     list.appendChild(el);
                 });
             } else {
-                if (!todos.length) { list.innerHTML = '<div class="empty-tip"><span class="empty-icon">📝</span>今天还没有安排任务</div>'; return; }
+                if (!todos.length) { list.innerHTML = '<div class="empty-tip"><span class="empty-icon">📋</span>今天还没有安排任务</div>'; return; }
                 todos.forEach((todo, i) => {
                     const el = document.createElement('div');
                     el.className = `item-card todo-item ${todo.is_completed?'completed':''}`;
