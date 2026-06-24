@@ -10,7 +10,15 @@
         const supabaseUrl = 'https://wyvykqfmcatohbekwikg.supabase.co';
         const supabaseKey = 'sb_publishable_YaPCqd25hTc_xD-8ZOPZ0g_ssm05UU6';
         const { createClient } = window.supabase;
-        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+        // 【修复 5】配置 auth 持久化 + 自动刷新 + 关闭自动检测（手动处理回调避免冲突）
+        const supabaseClient = createClient(supabaseUrl, supabaseKey, {
+            auth: {
+                persistSession: true,
+                storage: localStorage,
+                autoRefreshToken: true,
+                detectSessionInUrl: false
+            }
+        });
     </script>
 
     <style>
@@ -140,11 +148,18 @@
             color: var(--text-main); padding: 40px 24px;
             display: flex; flex-direction: column; align-items: center;
             min-height: 100vh; overflow-x: hidden;
-            transition: background 1s var(--transition-smooth), color 0.6s ease;
+            transition: color 0.6s ease;
         }
         body::before, body::after { content: ''; position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; transition: all 1.4s var(--transition-smooth); }
         body::before { width: 600px; height: 600px; top: -200px; right: -100px; background: radial-gradient(circle, var(--accent-todo-glow) 0%, transparent 70%); opacity: var(--decorative-opacity); }
         body::after { width: 500px; height: 500px; bottom: -150px; left: -100px; background: radial-gradient(circle, var(--accent-idea-glow) 0%, transparent 70%); opacity: var(--decorative-opacity); }
+
+        /* 【修复 4】主题切换遮罩 */
+        .theme-overlay {
+            position: fixed; inset: 0;
+            z-index: 99999; pointer-events: none;
+            opacity: 0; transition: opacity 0.4s ease;
+        }
 
         .theme-deco { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; overflow: hidden; opacity: 0; transition: opacity 1.6s var(--transition-smooth); }
         :root[data-theme="light"] .deco-light { opacity: 1; }
@@ -152,8 +167,9 @@
         :root[data-theme="forest"] .deco-forest { opacity: 1; }
         :root[data-theme="cute-pink"] .deco-pink { opacity: 1; }
 
+        /* 【修复 2】加大浅色粒子尺寸与对比度 */
         .dust-mote { position: absolute; border-radius: 50%; animation: dustDrift linear infinite; }
-        @keyframes dustDrift { 0% { transform: translate(0,0) scale(0.4); opacity: 0; } 8% { opacity: var(--peak); } 70% { opacity: var(--mid); } 100% { transform: translate(var(--dx), var(--dy)) scale(0.6); opacity: 0; } }
+        @keyframes dustDrift { 0% { transform: translate(0,0) scale(0.4); opacity: 0; } 10% { opacity: var(--peak); } 60% { opacity: var(--mid); } 100% { transform: translate(var(--dx), var(--dy)) scale(0.7); opacity: 0; } }
         .star { position: absolute; background: white; border-radius: 50%; animation: twinkle var(--dur) ease-in-out infinite; opacity: 0; }
         @keyframes twinkle { 0%, 100% { opacity: 0; } 50% { opacity: var(--max-opacity); } }
         .firefly { position: absolute; background: #c9a84c; border-radius: 50%; box-shadow: 0 0 6px 2px rgba(201,168,76,0.3); animation: fireflyGlow ease-in-out infinite; }
@@ -335,6 +351,9 @@
 </head>
 <body>
 
+    <!-- 【修复 4】主题切换遮罩层 -->
+    <div class="theme-overlay" id="theme-overlay"></div>
+
     <div class="theme-deco deco-light" id="deco-light"></div>
     <div class="theme-deco deco-dark" id="deco-dark"></div>
     <div class="theme-deco deco-forest" id="deco-forest"></div>
@@ -348,7 +367,6 @@
             <p class="auth-subtitle" id="auth-subtitle">输入邮箱地址，我们会发送一封登录链接到你的收件箱。</p>
             <div class="auth-form" id="auth-form">
                 <input type="email" id="auth-email" placeholder="输入邮箱地址">
-                <!-- 密码框：仅注册模式显示 -->
                 <input type="password" id="auth-password" class="hidden" placeholder="设置密码（至少 6 位）">
                 <button class="main-btn auth-submit-btn" id="auth-submit-btn" onclick="handleAuthSubmit()">发送登录链接</button>
             </div>
@@ -410,19 +428,22 @@
     </div>
 
     <script>
+        // ===================== 状态 =====================
         let todos = [], ideas = [];
         let todoTrash = JSON.parse(localStorage.getItem('my_todo_trash')) || [];
         let ideaTrash = JSON.parse(localStorage.getItem('my_idea_trash')) || [];
         let currentTheme = localStorage.getItem('my_theme') || 'light';
         let currentUser = null;
         let isAuthLoginMode = true;
-
         const themeNamesMap = { 'light': '简约浅灰', 'cute-pink': '温柔甜妹', 'dark': '优雅深色', 'forest': '复古森林' };
         let isTodoTrashView = false, isIdeaTrashView = false;
         let draggedTodoId = null, isEditingMode = false;
+        // 【修复 5】去重标记，防止 onAuthStateChange 重复触发
+        let lastAuthUserId = null;
         const dragPlaceholder = document.createElement('div');
         dragPlaceholder.className = 'drag-placeholder';
 
+        // ===================== 初始化 =====================
         window.onload = async function() {
             initTheme(currentTheme);
             setupDragAndDrop();
@@ -431,14 +452,19 @@
             setupRippleEffect();
             syncAuthCopy();
 
+            // 【修复 1 + 5】先注册监听器，再处理回调，再检查已有 session
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_OUT') {
+                    handleAuthState(null);
+                } else if (session) {
+                    handleAuthState(session.user);
+                }
+            });
+
             await handleAuthCallback();
 
             const { data: { session } } = await supabaseClient.auth.getSession();
-            handleAuthState(session ? session.user : null);
-
-            supabaseClient.auth.onAuthStateChange((_event, session) => {
-                handleAuthState(session ? session.user : null);
-            });
+            if (session) handleAuthState(session.user);
         };
 
         function setupGlobalEvents() {
@@ -449,12 +475,36 @@
             document.getElementById('idea-input').addEventListener('keydown', function(e) {
                 if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); addIdea(); }
             });
+            // 灵感输入框自动增高
+            document.getElementById('idea-input').addEventListener('input', function() {
+                this.style.height = '46px';
+                this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+            });
         }
 
-        // ========== 装饰 ==========
+        // ===================== 装饰（【修复 2】大幅增强浅色主题可见度）=====================
         function initDecorations() {
             const lightBox = document.getElementById('deco-light');
-            for (let i = 0; i < 24; i++) { const p = document.createElement('div'); p.className = 'dust-mote'; p.style.left = Math.random()*100+'%'; p.style.top = (10+Math.random()*85)+'%'; const s = 3+Math.random()*5; p.style.width = p.style.height = s+'px'; const hue = Math.random()>0.5?'210, 70%, 62%':'28, 80%, 62%'; const peakA = 0.45+Math.random()*0.25, midA = 0.1+Math.random()*0.12; p.style.background = `radial-gradient(circle, hsla(${hue}, ${peakA}), hsla(${hue}, 0.05))`; p.style.setProperty('--peak',peakA); p.style.setProperty('--mid',midA); p.style.setProperty('--dx',(Math.random()*60-30)+'px'); p.style.setProperty('--dy',-(30+Math.random()*60)+'px'); p.style.animationDuration=(10+Math.random()*14)+'s'; p.style.animationDelay=(Math.random()*12)+'s'; lightBox.appendChild(p); }
+            for (let i = 0; i < 30; i++) {
+                const p = document.createElement('div');
+                p.className = 'dust-mote';
+                p.style.left = Math.random()*100+'%';
+                p.style.top = (5+Math.random()*90)+'%';
+                const s = 6 + Math.random()*12; // 更大的粒子
+                p.style.width = p.style.height = s+'px';
+                const hue = Math.random()>0.5 ? '215, 75%, 58%' : '28, 85%, 58%';
+                const peakA = 0.55 + Math.random()*0.3;
+                const midA = 0.15 + Math.random()*0.15;
+                p.style.background = `radial-gradient(circle, hsla(${hue}, ${peakA}), hsla(${hue}, 0.02))`;
+                p.style.boxShadow = `0 0 ${s*1.5}px ${s*0.8}px hsla(${hue}, ${peakA*0.4})`;
+                p.style.setProperty('--peak', peakA);
+                p.style.setProperty('--mid', midA);
+                p.style.setProperty('--dx', (Math.random()*60-30)+'px');
+                p.style.setProperty('--dy', -(30+Math.random()*60)+'px');
+                p.style.animationDuration = (8+Math.random()*12)+'s';
+                p.style.animationDelay = (Math.random()*10)+'s';
+                lightBox.appendChild(p);
+            }
             const darkBox = document.getElementById('deco-dark');
             for (let i=0;i<60;i++){const s=document.createElement('div');s.className='star';s.style.left=Math.random()*100+'%';s.style.top=Math.random()*100+'%';s.style.setProperty('--dur',(2+Math.random()*4)+'s');s.style.setProperty('--max-opacity',(0.3+Math.random()*0.5));s.style.animationDelay=(Math.random()*4)+'s';s.style.width=s.style.height=(1+Math.random()*2)+'px';darkBox.appendChild(s);}
             const forestBox = document.getElementById('deco-forest');
@@ -473,8 +523,12 @@
             });
         }
 
-        // ========== 认证状态 ==========
+        // ===================== 认证状态（【修复 5】增加去重）=====================
         function handleAuthState(user) {
+            const newId = user ? user.id : null;
+            if (newId === lastAuthUserId) return;
+            lastAuthUserId = newId;
+
             currentUser = user;
             if (user) {
                 document.getElementById('auth-shell').classList.add('hidden');
@@ -491,14 +545,13 @@
             }
         }
 
-        // ========== 认证 UI 切换 ==========
+        // ===================== 认证 UI =====================
         function syncAuthCopy() {
             const pwdInput = document.getElementById('auth-password');
             const titleEl = document.getElementById('auth-title');
             const subEl = document.getElementById('auth-subtitle');
             const btnEl = document.getElementById('auth-submit-btn');
             const switchEl = document.getElementById('auth-switch-btn');
-
             if (isAuthLoginMode) {
                 titleEl.innerText = '邮箱登录';
                 subEl.innerText = '输入邮箱地址，我们会发送一封登录链接到你的收件箱。';
@@ -516,10 +569,7 @@
             setAuthMessage('');
         }
 
-        function toggleAuthMode() {
-            isAuthLoginMode = !isAuthLoginMode;
-            syncAuthCopy();
-        }
+        function toggleAuthMode() { isAuthLoginMode = !isAuthLoginMode; syncAuthCopy(); }
 
         function setAuthMessage(msg, type = '') {
             const el = document.getElementById('auth-message');
@@ -534,8 +584,7 @@
             return window.location.href.split('?')[0].split('#')[0];
         }
 
-        // ========== 邮箱确认/登录链接回调 ==========
-        // 用户从邮件点击链接后，URL 会带上 ?code=... 或 ?token_hash=...
+        // 【修复 1】回调处理更健壮，增加 try-catch 和详细日志
         async function handleAuthCallback() {
             const url = new URL(window.location.href);
             const code = url.searchParams.get('code');
@@ -546,32 +595,41 @@
             if (errorDesc) { setAuthMessage(decodeURIComponent(errorDesc), 'error'); return; }
             if (!code && !tokenHash) return;
 
-            let authError = null;
-            if (code) {
-                const r = await supabaseClient.auth.exchangeCodeForSession(code);
-                authError = r.error;
-            } else {
-                const r = await supabaseClient.auth.verifyOtp({ token_hash: tokenHash, type: authType || 'email' });
-                authError = r.error;
+            try {
+                let authError = null;
+                if (code) {
+                    const r = await supabaseClient.auth.exchangeCodeForSession(code);
+                    authError = r.error;
+                } else if (tokenHash) {
+                    // type 可能是 signup / magiclink / recovery 等
+                    const r = await supabaseClient.auth.verifyOtp({
+                        token_hash: tokenHash,
+                        type: authType || 'email'
+                    });
+                    authError = r.error;
+                }
+
+                if (authError) {
+                    console.error('认证回调错误:', authError);
+                    setAuthMessage(authError.message || '确认失败，请重试。', 'error');
+                    return;
+                }
+
+                // 清理 URL 参数
+                ['code','token_hash','state','type'].forEach(p => url.searchParams.delete(p));
+                window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+                setAuthMessage('已确认，欢迎回来！', 'success');
+            } catch (err) {
+                console.error('认证回调异常:', err);
+                setAuthMessage('认证过程出现异常，请重试。', 'error');
             }
-
-            if (authError) { setAuthMessage(authError.message || '确认失败，请重试。', 'error'); return; }
-
-            // 清理 URL 参数
-            url.searchParams.delete('code'); url.searchParams.delete('token_hash');
-            url.searchParams.delete('state'); url.searchParams.delete('type');
-            window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
-            setAuthMessage('已确认，欢迎回来！', 'success');
         }
 
-        // ========== 核心提交 ==========
+        // ===================== 认证操作 =====================
         async function handleAuthSubmit() {
             const email = document.getElementById('auth-email').value.trim();
-
             if (isAuthLoginMode) {
-                // ── 第一层：邮箱登录（发链接） ──
                 if (!email) { setAuthMessage('请输入邮箱地址。', 'error'); return; }
-
                 setAuthMessage('正在发送登录链接...');
                 const { error } = await supabaseClient.auth.signInWithOtp({
                     email,
@@ -579,103 +637,425 @@
                 });
                 if (error) { setAuthMessage(error.message || '发送失败，请稍后再试。', 'error'); return; }
                 setAuthMessage('登录链接已发送，请打开邮箱点击链接即可进入工作台。', 'success');
-
             } else {
-                // ── 第二层：注册（邮箱 + 设密码） ──
                 const password = document.getElementById('auth-password').value;
                 if (!email) { setAuthMessage('请输入邮箱地址。', 'error'); return; }
                 if (!password || password.length < 6) { setAuthMessage('密码至少需要 6 位。', 'error'); return; }
-
                 setAuthMessage('正在创建账号...');
-                const { data, error } = await supabaseClient.auth.signUp({
-                    email,
-                    password,
-                    options: { emailRedirectTo: getRedirectUrl() }
-                });
-                if (error) { setAuthMessage(error.message || '注册失败，请稍后再试。', 'error'); return; }
-
-                if (data.session) {
-                    setAuthMessage('注册成功，已自动登录！', 'success');
-                } else {
-                    setAuthMessage('注册成功！请前往邮箱点击确认链接，完成注册后即可用密码登录。', 'success');
+                try {
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email,
+                        password,
+                        options: { emailRedirectTo: getRedirectUrl() }
+                    });
+                    if (error) { setAuthMessage(error.message || '注册失败，请稍后再试。', 'error'); return; }
+                    if (data.session) {
+                        setAuthMessage('注册成功，已自动登录！', 'success');
+                    } else {
+                        setAuthMessage('注册成功！请前往邮箱点击确认链接，完成注册后即可用密码登录。', 'success');
+                    }
+                } catch (err) {
+                    console.error('注册异常:', err);
+                    setAuthMessage('注册过程出现异常，请稍后重试。', 'error');
                 }
             }
         }
 
         async function signOut() {
+            lastAuthUserId = null; // 重置去重标记
             const { error } = await supabaseClient.auth.signOut();
             if (error) { setAuthMessage(error.message || '退出失败。', 'error'); return; }
             document.getElementById('auth-password').value = '';
             setAuthMessage('你已退出登录。', 'success');
         }
 
-        // ========== Supabase 数据 ==========
+        // ===================== 数据操作（【修复 3】乐观更新，不再全量重载）=====================
+
+        function sortTodos() {
+            todos.sort((a, b) => {
+                if (a.is_completed !== b.is_completed) return a.is_completed ? 1 : -1;
+                return (a.order_index ?? 0) - (b.order_index ?? 0);
+            });
+        }
+
+        // 初始加载（仅登录时调用一次）
         async function loadDataFromSupabase() {
             if (!currentUser) return;
-            const { data: todoData } = await supabaseClient.from('todos').select('*').order('is_completed', { ascending: true }).order('order_index', { ascending: true });
-            const { data: ideaData } = await supabaseClient.from('ideas').select('*').order('created_at', { ascending: false });
-            if (todoData) todos = todoData;
-            if (ideaData) ideas = ideaData;
-            renderTodos(); renderIdeas();
+            try {
+                const [todoRes, ideaRes] = await Promise.all([
+                    supabaseClient.from('todos').select('*').order('is_completed', { ascending: true }).order('order_index', { ascending: true }),
+                    supabaseClient.from('ideas').select('*').order('created_at', { ascending: false })
+                ]);
+                if (todoRes.data) todos = todoRes.data;
+                if (ideaRes.data) ideas = ideaRes.data;
+                renderTodos(); renderIdeas();
+            } catch (err) {
+                console.error('加载数据失败:', err);
+            }
         }
 
-        async function addTodo() { const inp = document.getElementById('todo-input'); const text = inp.value.trim(); if (!text) return; await supabaseClient.from('todos').insert([{ text, is_completed: false, order_index: todos.length }]); inp.value = ''; loadDataFromSupabase(); }
-        async function toggleTodo(id, cur) { await supabaseClient.from('todos').update({ is_completed: !cur }).eq('id', id); loadDataFromSupabase(); }
-        async function trashTodo(id) { const t = todos.find(x => x.id === id); if (t) { todoTrash.push({ id: t.id, text: t.text, time: formatTime(t.created_at), is_completed: t.is_completed }); localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash)); await supabaseClient.from('todos').delete().eq('id', id); loadDataFromSupabase(); } }
-        async function restoreTodo(id) { const t = todoTrash.find(x => x.id === id); if (t) { await supabaseClient.from('todos').insert([{ text: t.text, is_completed: t.is_completed, order_index: todos.length }]); todoTrash = todoTrash.filter(x => x.id !== id); localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash)); loadDataFromSupabase(); } }
-        function burnTodo(id) { todoTrash = todoTrash.filter(t => t.id !== id); localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash)); renderTodos(); }
-        async function addIdea() { const inp = document.getElementById('idea-input'); const text = inp.value.trim(); if (!text) return; await supabaseClient.from('ideas').insert([{ text }]); inp.value = ''; loadDataFromSupabase(); }
-        async function trashIdea(id) { const t = ideas.find(x => x.id === id); if (t) { ideaTrash.push({ id: t.id, text: t.text, time: formatTime(t.created_at) }); localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash)); await supabaseClient.from('ideas').delete().eq('id', id); loadDataFromSupabase(); } }
-        async function restoreIdea(id) { const t = ideaTrash.find(x => x.id === id); if (t) { await supabaseClient.from('ideas').insert([{ text: t.text }]); ideaTrash = ideaTrash.filter(x => x.id !== id); localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash)); loadDataFromSupabase(); } }
-        function burnIdea(id) { ideaTrash = ideaTrash.filter(x => x.id !== id); localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash)); renderIdeas(); }
+        // ── 待办 CRUD ──
+        async function addTodo() {
+            const inp = document.getElementById('todo-input');
+            const text = inp.value.trim();
+            if (!text) return;
+            inp.value = '';
+            try {
+                const { data, error } = await supabaseClient.from('todos')
+                    .insert([{ text, is_completed: false, order_index: todos.length }])
+                    .select();
+                if (!error && data && data[0]) {
+                    todos.push(data[0]);
+                    sortTodos();
+                    renderTodos();
+                } else if (error) {
+                    inp.value = text; // 失败时恢复输入
+                    console.error('添加待办失败:', error);
+                }
+            } catch (err) {
+                inp.value = text;
+                console.error('添加待办异常:', err);
+            }
+        }
 
-        // ========== 拖拽 ==========
+        async function toggleTodo(id, cur) {
+            const todo = todos.find(t => t.id === id);
+            if (!todo) return;
+            const prev = todo.is_completed;
+            todo.is_completed = !cur;
+            sortTodos();
+            renderTodos();
+            const { error } = await supabaseClient.from('todos').update({ is_completed: !cur }).eq('id', id);
+            if (error) {
+                todo.is_completed = prev;
+                sortTodos();
+                renderTodos();
+                console.error('切换待办状态失败:', error);
+            }
+        }
+
+        async function trashTodo(id) {
+            const idx = todos.findIndex(t => t.id === id);
+            if (idx === -1) return;
+            const t = todos[idx];
+            // 乐观：先移入回收站、从列表删除、重新渲染
+            todoTrash.push({ id: t.id, text: t.text, time: formatTime(t.created_at), is_completed: t.is_completed });
+            localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
+            todos.splice(idx, 1);
+            renderTodos();
+            const { error } = await supabaseClient.from('todos').delete().eq('id', id);
+            if (error) {
+                // 回滚
+                todos.splice(idx, 0, t);
+                todoTrash.pop();
+                localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
+                sortTodos();
+                renderTodos();
+                console.error('删除待办失败:', error);
+            }
+        }
+
+        async function restoreTodo(id) {
+            const idx = todoTrash.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            const t = todoTrash[idx];
+            // 乐观：先从回收站移除
+            todoTrash.splice(idx, 1);
+            localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
+            renderTodos();
+            try {
+                const { data, error } = await supabaseClient.from('todos')
+                    .insert([{ text: t.text, is_completed: t.is_completed, order_index: todos.length }])
+                    .select();
+                if (!error && data && data[0]) {
+                    todos.push(data[0]);
+                    sortTodos();
+                } else {
+                    // 回滚回收站
+                    todoTrash.splice(idx, 0, t);
+                    localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
+                    renderTodos();
+                    console.error('还原待办失败:', error);
+                }
+            } catch (err) {
+                todoTrash.splice(idx, 0, t);
+                localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
+                renderTodos();
+                console.error('还原待办异常:', err);
+            }
+        }
+
+        function burnTodo(id) {
+            todoTrash = todoTrash.filter(t => t.id !== id);
+            localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
+            renderTodos();
+        }
+
+        // ── 灵感 CRUD ──
+        async function addIdea() {
+            const inp = document.getElementById('idea-input');
+            const text = inp.value.trim();
+            if (!text) return;
+            inp.value = '';
+            inp.style.height = '46px'; // 重置高度
+            try {
+                const { data, error } = await supabaseClient.from('ideas')
+                    .insert([{ text }])
+                    .select();
+                if (!error && data && data[0]) {
+                    ideas.unshift(data[0]);
+                    renderIdeas();
+                } else if (error) {
+                    inp.value = text;
+                    console.error('添加灵感失败:', error);
+                }
+            } catch (err) {
+                inp.value = text;
+                console.error('添加灵感异常:', err);
+            }
+        }
+
+        async function trashIdea(id) {
+            const idx = ideas.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            const t = ideas[idx];
+            ideaTrash.push({ id: t.id, text: t.text, time: formatTime(t.created_at) });
+            localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
+            ideas.splice(idx, 1);
+            renderIdeas();
+            const { error } = await supabaseClient.from('ideas').delete().eq('id', id);
+            if (error) {
+                ideas.splice(idx, 0, t);
+                ideaTrash.pop();
+                localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
+                renderIdeas();
+                console.error('删除灵感失败:', error);
+            }
+        }
+
+        async function restoreIdea(id) {
+            const idx = ideaTrash.findIndex(x => x.id === id);
+            if (idx === -1) return;
+            const t = ideaTrash[idx];
+            ideaTrash.splice(idx, 1);
+            localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
+            renderIdeas();
+            try {
+                const { data, error } = await supabaseClient.from('ideas').insert([{ text: t.text }]).select();
+                if (!error && data && data[0]) {
+                    ideas.unshift(data[0]);
+                } else {
+                    ideaTrash.splice(idx, 0, t);
+                    localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
+                    renderIdeas();
+                    console.error('还原灵感失败:', error);
+                }
+            } catch (err) {
+                ideaTrash.splice(idx, 0, t);
+                localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
+                renderIdeas();
+                console.error('还原灵感异常:', err);
+            }
+        }
+
+        function burnIdea(id) {
+            ideaTrash = ideaTrash.filter(x => x.id !== id);
+            localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
+            renderIdeas();
+        }
+
+        // ===================== 拖拽（更新本地状态 + 后台同步）=====================
         function setupDragAndDrop() {
             const listEl = document.getElementById('todo-list');
-            listEl.addEventListener('dragstart', (e) => { const c = e.target.closest('.todo-item'); if (!c || isTodoTrashView || isEditingMode) { e.preventDefault(); return; } draggedTodoId = parseInt(c.dataset.id); setTimeout(() => { c.style.display = 'none'; c.parentNode.insertBefore(dragPlaceholder, c); }, 0); });
-            listEl.addEventListener('dragover', (e) => { e.preventDefault(); const t = e.target.closest('.todo-item'); if (t && t.dataset.id != draggedTodoId && !isTodoTrashView) { const r = t.getBoundingClientRect(); if (e.clientY < r.top + r.height / 2) t.parentNode.insertBefore(dragPlaceholder, t); else t.parentNode.insertBefore(dragPlaceholder, t.nextSibling); } });
-            listEl.addEventListener('drop', (e) => { e.preventDefault(); if (isTodoTrashView || !draggedTodoId) return; const el = document.querySelector(`[data-id="${draggedTodoId}"]`); if (el && dragPlaceholder.parentNode) dragPlaceholder.parentNode.insertBefore(el, dragPlaceholder); });
-            listEl.addEventListener('dragend', async () => { if (dragPlaceholder.parentNode) dragPlaceholder.parentNode.removeChild(dragPlaceholder); const el = document.querySelector(`[data-id="${draggedTodoId}"]`); if (el) el.style.display = ''; const ups = []; document.querySelectorAll('#todo-list .todo-item').forEach((el, i) => { ups.push(supabaseClient.from('todos').update({ order_index: i }).eq('id', parseInt(el.dataset.id))); }); await Promise.all(ups); loadDataFromSupabase(); draggedTodoId = null; });
+            listEl.addEventListener('dragstart', (e) => {
+                const c = e.target.closest('.todo-item');
+                if (!c || isTodoTrashView || isEditingMode) { e.preventDefault(); return; }
+                draggedTodoId = parseInt(c.dataset.id);
+                setTimeout(() => { c.style.display = 'none'; c.parentNode.insertBefore(dragPlaceholder, c); }, 0);
+            });
+            listEl.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const t = e.target.closest('.todo-item');
+                if (t && t.dataset.id != draggedTodoId && !isTodoTrashView) {
+                    const r = t.getBoundingClientRect();
+                    if (e.clientY < r.top + r.height / 2) t.parentNode.insertBefore(dragPlaceholder, t);
+                    else t.parentNode.insertBefore(dragPlaceholder, t.nextSibling);
+                }
+            });
+            listEl.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (isTodoTrashView || !draggedTodoId) return;
+                const el = document.querySelector(`[data-id="${draggedTodoId}"]`);
+                if (el && dragPlaceholder.parentNode) dragPlaceholder.parentNode.insertBefore(el, dragPlaceholder);
+            });
+            listEl.addEventListener('dragend', async () => {
+                if (dragPlaceholder.parentNode) dragPlaceholder.parentNode.removeChild(dragPlaceholder);
+                const el = document.querySelector(`[data-id="${draggedTodoId}"]`);
+                if (el) el.style.display = '';
+
+                // 从 DOM 读取新顺序，更新本地数据
+                const domItems = document.querySelectorAll('#todo-list .todo-item');
+                const changedUpdates = [];
+                domItems.forEach((item, i) => {
+                    const id = parseInt(item.dataset.id);
+                    const todo = todos.find(t => t.id === id);
+                    if (todo && (todo.order_index ?? 0) !== i) {
+                        todo.order_index = i;
+                        changedUpdates.push({ id, order_index: i });
+                    }
+                });
+                sortTodos();
+                renderTodos();
+
+                // 后台同步仅更新变化的项
+                if (changedUpdates.length) {
+                    await Promise.allSettled(
+                        changedUpdates.map(u => supabaseClient.from('todos').update({ order_index: u.order_index }).eq('id', u.id))
+                    );
+                }
+                draggedTodoId = null;
+            });
         }
 
-        // ========== 就地编辑 ==========
-        function startEditTodo(id, span) { if (isTodoTrashView) return; isEditingMode = true; const c = span.closest('.todo-item'); if (c) c.setAttribute('draggable', 'false'); const cur = span.innerText; const inp = document.createElement('input'); inp.type = 'text'; inp.className = 'inline-edit-input'; inp.value = cur; span.replaceWith(inp); inp.focus(); inp.select(); const done = async () => { if (!isEditingMode) return; const v = inp.value.trim(); if (v && v !== cur) await supabaseClient.from('todos').update({ text: v }).eq('id', id); isEditingMode = false; loadDataFromSupabase(); }; inp.addEventListener('blur', done); inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') done(); if (e.key === 'Escape') { isEditingMode = false; renderTodos(); } }); }
-        function startEditIdea(id, div) { if (isIdeaTrashView) return; isEditingMode = true; const cur = div.innerText; const ta = document.createElement('textarea'); ta.className = 'inline-edit-textarea'; ta.value = cur; div.replaceWith(ta); ta.focus(); const done = async () => { if (!isEditingMode) return; const v = ta.value.trim(); if (v && v !== cur) await supabaseClient.from('ideas').update({ text: v }).eq('id', id); isEditingMode = false; loadDataFromSupabase(); }; ta.addEventListener('blur', done); ta.addEventListener('keydown', (e) => { if ((e.ctrlKey||e.metaKey)&&e.key==='Enter') done(); if (e.key==='Escape') { isEditingMode = false; renderIdeas(); } }); }
+        // ===================== 就地编辑（更新本地状态，不再全量重载）=====================
+        function startEditTodo(id, span) {
+            if (isTodoTrashView) return;
+            isEditingMode = true;
+            const c = span.closest('.todo-item');
+            if (c) c.setAttribute('draggable', 'false');
+            const cur = span.innerText;
+            const inp = document.createElement('input');
+            inp.type = 'text'; inp.className = 'inline-edit-input'; inp.value = cur;
+            span.replaceWith(inp); inp.focus(); inp.select();
+            const done = async () => {
+                if (!isEditingMode) return;
+                const v = inp.value.trim();
+                if (v && v !== cur) {
+                    const todo = todos.find(t => t.id === id);
+                    if (todo) todo.text = v;
+                    supabaseClient.from('todos').update({ text: v }).eq('id', id);
+                }
+                isEditingMode = false;
+                renderTodos();
+            };
+            inp.addEventListener('blur', done);
+            inp.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') done();
+                if (e.key === 'Escape') { isEditingMode = false; renderTodos(); }
+            });
+        }
 
-        // ========== UI ==========
+        function startEditIdea(id, div) {
+            if (isIdeaTrashView) return;
+            isEditingMode = true;
+            const cur = div.innerText;
+            const ta = document.createElement('textarea');
+            ta.className = 'inline-edit-textarea'; ta.value = cur;
+            div.replaceWith(ta); ta.focus();
+            const done = async () => {
+                if (!isEditingMode) return;
+                const v = ta.value.trim();
+                if (v && v !== cur) {
+                    const idea = ideas.find(x => x.id === id);
+                    if (idea) idea.text = v;
+                    supabaseClient.from('ideas').update({ text: v }).eq('id', id);
+                }
+                isEditingMode = false;
+                renderIdeas();
+            };
+            ta.addEventListener('blur', done);
+            ta.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey||e.metaKey)&&e.key==='Enter') done();
+                if (e.key==='Escape') { isEditingMode = false; renderIdeas(); }
+            });
+        }
+
+        // ===================== UI 工具 =====================
         function toggleDropdown(e) { e.stopPropagation(); document.getElementById('theme-dropdown').classList.toggle('active'); }
         function initTheme(n) { document.documentElement.setAttribute('data-theme', n); document.getElementById('dropdown-title').innerText = themeNamesMap[n]||'简约浅灰'; updateDropdownHighlight(n); }
-        function selectTheme(n, t) { document.documentElement.setAttribute('data-theme', n); document.getElementById('dropdown-title').innerText = t; localStorage.setItem('my_theme', n); updateDropdownHighlight(n); }
+
+        // 【修复 4】主题切换加遮罩渐变
+        function selectTheme(n, t) {
+            document.getElementById('theme-dropdown').classList.remove('active');
+            const overlay = document.getElementById('theme-overlay');
+            // 用当前主题的纯色作为遮罩背景
+            overlay.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bg-color').trim();
+            overlay.style.opacity = '1';
+            setTimeout(() => {
+                document.documentElement.setAttribute('data-theme', n);
+                document.getElementById('dropdown-title').innerText = t;
+                localStorage.setItem('my_theme', n);
+                updateDropdownHighlight(n);
+                // 切换后把遮罩色更新为新主题的背景（此时 opacity=1 不可见）
+                overlay.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bg-color').trim();
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        overlay.style.opacity = '0';
+                    });
+                });
+            }, 400);
+        }
+
         function updateDropdownHighlight(n) { document.querySelectorAll('.dropdown-item').forEach(i => { i.classList.toggle('selected', i.getAttribute('data-value')===n); }); }
         function formatTime(ts) { if (!ts) return '未知'; const d = new Date(ts); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
         function triggerViewTransition(id, fn) { const c = document.getElementById(id); c.classList.add('view-changing'); setTimeout(() => { fn(); c.classList.remove('view-changing'); }, 200); }
 
-        // ========== 渲染 ==========
+        // ===================== 渲染 =====================
         function renderTodos() {
             const list = document.getElementById('todo-list'); list.innerHTML = '';
             if (isTodoTrashView) {
                 if (!todoTrash.length) { list.innerHTML = '<div class="empty-tip"><span class="empty-icon">🗑️</span>回收站空空如也</div>'; return; }
-                todoTrash.forEach(item => { const el = document.createElement('div'); el.className = 'item-card'; el.innerHTML = `<div class="todo-info-wrapper"><span style="color:var(--text-muted);font-size:0.92rem;">${escapeHtml(item.text)}</span><span class="timestamp">创建于 ${item.time||'未知'}</span></div><div><button class="action-text-btn restore-btn" onclick="restoreTodo(${item.id})">还原</button><button class="action-text-btn" onclick="burnTodo(${item.id})">粉碎</button></div>`; list.appendChild(el); });
+                todoTrash.forEach(item => {
+                    const el = document.createElement('div'); el.className = 'item-card';
+                    el.innerHTML = `<div class="todo-info-wrapper"><span style="color:var(--text-muted);font-size:0.92rem;">${escapeHtml(item.text)}</span><span class="timestamp">创建于 ${item.time||'未知'}</span></div><div><button class="action-text-btn restore-btn" onclick="restoreTodo(${item.id})">还原</button><button class="action-text-btn" onclick="burnTodo(${item.id})">粉碎</button></div>`;
+                    list.appendChild(el);
+                });
             } else {
                 if (!todos.length) { list.innerHTML = '<div class="empty-tip"><span class="empty-icon">📝</span>今天还没有安排任务</div>'; return; }
-                todos.forEach((todo, i) => { const el = document.createElement('div'); el.className = `item-card todo-item ${todo.is_completed?'completed':''}`; el.setAttribute('draggable','true'); el.dataset.id = todo.id; el.innerHTML = `<div class="todo-content"><input type="checkbox" ${todo.is_completed?'checked':''} onclick="toggleTodo(${todo.id},${todo.is_completed})"><div class="todo-info-wrapper"><div class="todo-text-container"><span class="todo-seq">${i+1}</span><span class="todo-text" ondblclick="startEditTodo(${todo.id},this)">${escapeHtml(todo.text)}</span></div><span class="timestamp">创建于 ${formatTime(todo.created_at)}</span></div></div><button class="action-text-btn" onclick="trashTodo(${todo.id})" style="position:relative;z-index:2;">删除</button>`; list.appendChild(el); });
+                todos.forEach((todo, i) => {
+                    const el = document.createElement('div');
+                    el.className = `item-card todo-item ${todo.is_completed?'completed':''}`;
+                    el.setAttribute('draggable','true'); el.dataset.id = todo.id;
+                    el.innerHTML = `<div class="todo-content"><input type="checkbox" ${todo.is_completed?'checked':''} onclick="toggleTodo(${todo.id},${todo.is_completed})"><div class="todo-info-wrapper"><div class="todo-text-container"><span class="todo-seq">${i+1}</span><span class="todo-text" ondblclick="startEditTodo(${todo.id},this)">${escapeHtml(todo.text)}</span></div><span class="timestamp">创建于 ${formatTime(todo.created_at)}</span></div></div><button class="action-text-btn" onclick="trashTodo(${todo.id})" style="position:relative;z-index:2;">删除</button>`;
+                    list.appendChild(el);
+                });
             }
         }
 
-        function toggleTodoTrash() { isTodoTrashView = !isTodoTrashView; document.getElementById('todo-input-zone').style.display = isTodoTrashView ? 'none' : 'flex'; document.getElementById('todo-panel-title').innerText = isTodoTrashView ? '待办 · 回收站' : '每日待办'; document.getElementById('todo-trash-toggle').innerText = isTodoTrashView ? '返回列表' : '回收站'; triggerViewTransition('todo-list', renderTodos); }
+        function toggleTodoTrash() {
+            isTodoTrashView = !isTodoTrashView;
+            document.getElementById('todo-input-zone').style.display = isTodoTrashView ? 'none' : 'flex';
+            document.getElementById('todo-panel-title').innerText = isTodoTrashView ? '待办 · 回收站' : '每日待办';
+            document.getElementById('todo-trash-toggle').innerText = isTodoTrashView ? '返回列表' : '回收站';
+            triggerViewTransition('todo-list', renderTodos);
+        }
 
         function renderIdeas() {
             const list = document.getElementById('idea-list'); list.innerHTML = '';
             if (isIdeaTrashView) {
                 if (!ideaTrash.length) { list.innerHTML = '<div class="empty-tip"><span class="empty-icon">🗑️</span>回收站空空如也</div>'; return; }
-                ideaTrash.forEach(item => { const el = document.createElement('div'); el.className = 'idea-card'; el.style.opacity = '0.6'; el.innerHTML = `<div class="idea-header"><span class="timestamp">创建于 ${item.time||'未知'}</span><div><button class="action-text-btn restore-btn" onclick="restoreIdea(${item.id})">还原</button><button class="action-text-btn" onclick="burnIdea(${item.id})">粉碎</button></div></div><div class="idea-text">${escapeHtml(item.text)}</div>`; list.appendChild(el); });
+                ideaTrash.forEach(item => {
+                    const el = document.createElement('div'); el.className = 'idea-card'; el.style.opacity = '0.6';
+                    el.innerHTML = `<div class="idea-header"><span class="timestamp">创建于 ${item.time||'未知'}</span><div><button class="action-text-btn restore-btn" onclick="restoreIdea(${item.id})">还原</button><button class="action-text-btn" onclick="burnIdea(${item.id})">粉碎</button></div></div><div class="idea-text">${escapeHtml(item.text)}</div>`;
+                    list.appendChild(el);
+                });
             } else {
                 if (!ideas.length) { list.innerHTML = '<div class="empty-tip"><span class="empty-icon">💡</span>捕捉一瞬间的火花</div>'; return; }
-                ideas.forEach(idea => { const el = document.createElement('div'); el.className = 'idea-card'; el.innerHTML = `<div class="idea-header"><span class="timestamp">记录于 ${formatTime(idea.created_at)}</span><button class="action-text-btn" onclick="trashIdea(${idea.id})">删除</button></div><div class="idea-text" ondblclick="startEditIdea(${idea.id},this)">${escapeHtml(idea.text)}</div>`; list.appendChild(el); });
+                ideas.forEach(idea => {
+                    const el = document.createElement('div'); el.className = 'idea-card';
+                    el.innerHTML = `<div class="idea-header"><span class="timestamp">记录于 ${formatTime(idea.created_at)}</span><button class="action-text-btn" onclick="trashIdea(${idea.id})">删除</button></div><div class="idea-text" ondblclick="startEditIdea(${idea.id},this)">${escapeHtml(idea.text)}</div>`;
+                    list.appendChild(el);
+                });
             }
         }
 
-        function toggleIdeaTrash() { isIdeaTrashView = !isIdeaTrashView; document.getElementById('idea-input-zone').style.display = isIdeaTrashView ? 'none' : 'flex'; document.getElementById('idea-panel-title').innerText = isIdeaTrashView ? '灵感 · 回收站' : '灵感闪现'; document.getElementById('idea-trash-toggle').innerText = isIdeaTrashView ? '返回列表' : '回收站'; triggerViewTransition('idea-list', renderIdeas); }
+        function toggleIdeaTrash() {
+            isIdeaTrashView = !isIdeaTrashView;
+            document.getElementById('idea-input-zone').style.display = isIdeaTrashView ? 'none' : 'flex';
+            document.getElementById('idea-panel-title').innerText = isIdeaTrashView ? '灵感 · 回收站' : '灵感闪现';
+            document.getElementById('idea-trash-toggle').innerText = isIdeaTrashView ? '返回列表' : '回收站';
+            triggerViewTransition('idea-list', renderIdeas);
+        }
 
         function escapeHtml(t) { const m = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}; return t.replace(/[&<>"']/g, c => m[c]); }
     </script>
