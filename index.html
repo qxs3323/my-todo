@@ -485,18 +485,19 @@
         // ===================== 装饰（【修复 2】大幅增强浅色主题可见度）=====================
         function initDecorations() {
             const lightBox = document.getElementById('deco-light');
-            for (let i = 0; i < 30; i++) {
+            for (let i = 0; i < 32; i++) {
                 const p = document.createElement('div');
                 p.className = 'dust-mote';
                 p.style.left = Math.random()*100+'%';
                 p.style.top = (5+Math.random()*90)+'%';
-                const s = 6 + Math.random()*12; // 更大的粒子
+                const s = 7 + Math.random()*9;
                 p.style.width = p.style.height = s+'px';
-                const hue = Math.random()>0.5 ? '215, 75%, 58%' : '28, 85%, 58%';
-                const peakA = 0.55 + Math.random()*0.3;
-                const midA = 0.15 + Math.random()*0.15;
-                p.style.background = `radial-gradient(circle, hsla(${hue}, ${peakA}), hsla(${hue}, 0.02))`;
-                p.style.boxShadow = `0 0 ${s*1.5}px ${s*0.8}px hsla(${hue}, ${peakA*0.4})`;
+                const useOrange = Math.random() > 0.45;
+                const hue = useOrange ? '28, 80%, 58%' : '215, 70%, 58%';
+                const peakA = 0.5 + Math.random()*0.2;
+                const midA = 0.12 + Math.random()*0.12;
+                p.style.background = `radial-gradient(circle, hsla(${hue}, ${peakA}) 25%, hsla(${hue}, ${peakA*0.3}) 60%, hsla(${hue}, 0) 100%)`;
+                p.style.boxShadow = `0 0 ${s*1.5}px ${s*0.8}px hsla(${hue}, ${peakA*0.35})`;
                 p.style.setProperty('--peak', peakA);
                 p.style.setProperty('--mid', midA);
                 p.style.setProperty('--dx', (Math.random()*60-30)+'px');
