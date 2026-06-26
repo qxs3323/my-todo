@@ -154,12 +154,7 @@
         body::before { width: 600px; height: 600px; top: -200px; right: -100px; background: radial-gradient(circle, var(--accent-todo-glow) 0%, transparent 70%); opacity: var(--decorative-opacity); }
         body::after { width: 500px; height: 500px; bottom: -150px; left: -100px; background: radial-gradient(circle, var(--accent-idea-glow) 0%, transparent 70%); opacity: var(--decorative-opacity); }
 
-        /* 【修复 4】主题切换遮罩 */
-        .theme-overlay {
-            position: fixed; inset: 0;
-            z-index: 99999; pointer-events: none;
-            opacity: 0; transition: opacity 0.4s ease;
-        }
+        /* 主题切换遮罩已移除 */
 
         .theme-deco { position: fixed; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; overflow: hidden; opacity: 0; transition: opacity 1.6s var(--transition-smooth); }
         :root[data-theme="light"] .deco-light { opacity: 1; }
@@ -242,8 +237,7 @@
         }
         .panel:nth-child(1) { animation-delay: 0.15s; }
         .panel:nth-child(2) { animation-delay: 0.25s; }
-        .panel::before { content: ''; position: absolute; top: 0; left: 20px; right: 20px; height: 3px; border-radius: 0 0 3px 3px; background: linear-gradient(90deg, var(--accent-todo), var(--accent-idea)); opacity: 0.4; transition: opacity 0.4s ease, background 0.8s ease; }
-        .panel:hover::before { opacity: 0.7; }
+        .panel::before { display: none; }
 
         h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; letter-spacing: -0.3px; transition: color 0.6s ease, border-color 0.6s ease; }
         .todo-title { color: var(--accent-todo); }
@@ -351,8 +345,7 @@
 </head>
 <body>
 
-    <!-- 【修复 4】主题切换遮罩层 -->
-    <div class="theme-overlay" id="theme-overlay"></div>
+    <!-- 主题切换遮罩层已移除 -->
 
     <div class="theme-deco deco-light" id="deco-light"></div>
     <div class="theme-deco deco-dark" id="deco-dark"></div>
@@ -390,7 +383,7 @@
                     <div class="dropdown-btn" id="dropdown-title" onclick="toggleDropdown(event)">简约浅灰</div>
                     <div class="dropdown-menu">
                         <div class="dropdown-item" data-value="light" onclick="selectTheme('light', '简约浅灰')">简约浅灰</div>
-                        <div class="dropdown-item" data-value="cute-pink" onclick="selectTheme('cute-pink', '温柔甜粉')">温柔甜粉</div>
+                        <div class="dropdown-item" data-value="cute-pink" onclick="selectTheme('cute-pink', '温柔甜妹')">温柔甜妹</div>
                         <div class="dropdown-item" data-value="dark" onclick="selectTheme('dark', '优雅深色')">优雅深色</div>
                         <div class="dropdown-item" data-value="forest" onclick="selectTheme('forest', '复古森林')">复古森林</div>
                     </div>
@@ -435,7 +428,7 @@
         let currentTheme = localStorage.getItem('my_theme') || 'light';
         let currentUser = null;
         let isAuthLoginMode = true;
-        const themeNamesMap = { 'light': '简约浅灰', 'cute-pink': '温柔甜粉', 'dark': '优雅深色', 'forest': '复古森林' };
+        const themeNamesMap = { 'light': '简约浅灰', 'cute-pink': '温柔甜妹', 'dark': '优雅深色', 'forest': '复古森林' };
         let isTodoTrashView = false, isIdeaTrashView = false;
         let draggedTodoId = null, isEditingMode = false;
         const AUTH_RETURN_URL_KEY = 'my_auth_return_url';
@@ -650,7 +643,6 @@
                     });
                     authError = r.error;
                 } else if (tokenHash) {
-                    // type 可能是 signup / magiclink / recovery 等
                     const r = await supabaseClient.auth.verifyOtp({
                         token_hash: tokenHash,
                         type: authType || 'email'
@@ -664,18 +656,24 @@
                     return;
                 }
 
-                ['code','token_hash','state','type','error_description'].forEach(p => url.searchParams.delete(p));
-                ['access_token','refresh_token','expires_at','expires_in','token_type','type'].forEach(p => hashParams.delete(p));
-
-                const returnUrl = consumeReturnUrl();
-                const currentWithoutHash = window.location.href.split('#')[0];
-                if (returnUrl && returnUrl !== currentWithoutHash) {
-                    window.location.replace(returnUrl);
-                    return;
-                }
+                // 清理 URL 中的认证参数
+                url.searchParams.delete('code');
+                url.searchParams.delete('token_hash');
+                url.searchParams.delete('type');
+                url.searchParams.delete('error_description');
+                url.searchParams.delete('state');
+                hashParams.delete('access_token');
+                hashParams.delete('refresh_token');
+                hashParams.delete('expires_at');
+                hashParams.delete('expires_in');
+                hashParams.delete('token_type');
+                hashParams.delete('type');
+                hashParams.delete('code');
+                hashParams.delete('token_hash');
 
                 url.pathname = normalizeAppPath(url.pathname);
                 url.hash = hashParams.toString() ? `#${hashParams.toString()}` : '';
+                // 使用 replaceState 清理 URL，不刷新页面
                 window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
                 setAuthMessage('已确认，欢迎回来！', 'success');
             } catch (err) {
@@ -1035,26 +1033,13 @@
         function toggleDropdown(e) { e.stopPropagation(); document.getElementById('theme-dropdown').classList.toggle('active'); }
         function initTheme(n) { document.documentElement.setAttribute('data-theme', n); document.getElementById('dropdown-title').innerText = themeNamesMap[n]||'简约浅灰'; updateDropdownHighlight(n); }
 
-        // 【修复 4】主题切换加遮罩渐变
+        // 主题切换（无遮罩）
         function selectTheme(n, t) {
             document.getElementById('theme-dropdown').classList.remove('active');
-            const overlay = document.getElementById('theme-overlay');
-            // 用当前主题的纯色作为遮罩背景
-            overlay.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bg-color').trim();
-            overlay.style.opacity = '1';
-            setTimeout(() => {
-                document.documentElement.setAttribute('data-theme', n);
-                document.getElementById('dropdown-title').innerText = t;
-                localStorage.setItem('my_theme', n);
-                updateDropdownHighlight(n);
-                // 切换后把遮罩色更新为新主题的背景（此时 opacity=1 不可见）
-                overlay.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bg-color').trim();
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        overlay.style.opacity = '0';
-                    });
-                });
-            }, 400);
+            document.documentElement.setAttribute('data-theme', n);
+            document.getElementById('dropdown-title').innerText = t;
+            localStorage.setItem('my_theme', n);
+            updateDropdownHighlight(n);
         }
 
         function updateDropdownHighlight(n) { document.querySelectorAll('.dropdown-item').forEach(i => { i.classList.toggle('selected', i.getAttribute('data-value')===n); }); }
