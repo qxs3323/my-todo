@@ -1,0 +1,758 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>随心工作台</title>
+    
+    <!-- 🟢 1. 引入 Supabase 官方 SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+<script>
+        const supabaseUrl = 'https://wyvykqfmcatohbekwikg.supabase.co';
+        const supabaseKey = 'sb_publishable_YaPCqd25hTc_xD-8ZOPZ0g_ssm05UU6';
+        const { createClient } = window.supabase;
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+    </script>
+    <style>
+        /* 统一定义四套主题色 —— 高透液态玻璃 */
+        :root[data-theme="light"] {
+            --bg-color: #f4f6f9; --card-bg: #ffffff; --text-main: #2c3e50; --text-muted: #7f8c8d;
+            --accent-todo: #3498db; --accent-idea: #e67e22; --border-color: #eaeaea;
+            --glass-bg: rgba(255, 255, 255, 0.15); --glass-border: rgba(255, 255, 255, 0.65);
+            --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.02), 0 16px 40px rgba(44, 62, 80, 0.04);
+            --glass-hover: rgba(0, 0, 0, 0.03);
+        }
+        :root[data-theme="dark"] {
+            --bg-color: #1a1a1a; --card-bg: #2d2d2d; --text-main: #ecf0f1; --text-muted: #95a5a6;
+            --accent-todo: #5dade2; --accent-idea: #f5b041; --border-color: #3d3d3d;
+            --glass-bg: rgba(45, 45, 45, 0.2); --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-shadow: 0 16px 40px rgba(0, 0, 0, 0.4); --glass-hover: rgba(255, 255, 255, 0.06);
+        }
+        :root[data-theme="forest"] {
+            --bg-color: #e8efe9; --card-bg: #fafcfb; --text-main: #2d3a34; --text-muted: #8ca396;
+            --accent-todo: #6b8e79; --accent-idea: #cca47c; --border-color: #dae3dd;
+            --glass-bg: rgba(250, 252, 251, 0.2); --glass-border: rgba(255, 255, 255, 0.7);
+            --glass-shadow: 0 16px 40px rgba(107, 142, 121, 0.05); --glass-hover: rgba(107, 142, 121, 0.06);
+        }
+        :root[data-theme="cute-pink"] {
+            --bg-color: #fff0f5; --card-bg: #ffffff; --text-main: #6c4a4a; --text-muted: #caa5a5;
+            --accent-todo: #ff85a2; --accent-idea: #ffb3c6; --border-color: #ffe3e8;
+            --glass-bg: rgba(255, 255, 255, 0.25); --glass-border: rgba(255, 255, 255, 0.75);
+            --glass-shadow: 0 16px 40px rgba(255, 133, 162, 0.08); --glass-hover: rgba(255, 133, 162, 0.05);
+        }
+        :root {
+            --radius: 12px; --shadow-sm: 0 4px 12px rgba(0,0,0,0.02); --shadow-md: 0 10px 30px rgba(0,0,0,0.03);
+            --spring-transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            --jelly-animation: springIn 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 40px 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
+        .hidden { display: none !important; }
+        .auth-shell, .app-shell { width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .auth-shell { flex: 1; justify-content: center; }
+        .auth-card { width: 100%; max-width: 460px; background: var(--card-bg); border-radius: 24px; padding: 36px 32px; box-shadow: var(--shadow-md); border: 1px solid var(--glass-border); animation: fadeInUp 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+        .auth-eyebrow { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-todo); margin-bottom: 10px; }
+        .auth-card h1 { font-size: 2rem; margin-bottom: 10px; }
+        .auth-subtitle { color: var(--text-muted); line-height: 1.7; font-size: 0.95rem; margin-bottom: 24px; }
+        .auth-form { display: flex; flex-direction: column; gap: 14px; }
+        .auth-form input[type="email"], .auth-form input[type="password"] { width: 100%; height: 48px; padding: 0 16px; border: 1px solid var(--border-color); border-radius: calc(var(--radius) - 2px); font-size: 0.95rem; outline: none; background-color: var(--bg-color); color: var(--text-main); transition: var(--spring-transition); }
+        .auth-form input[type="email"]:focus, .auth-form input[type="password"]:focus { border-color: var(--accent-todo); transform: scale(1.01); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .auth-submit-btn { width: 100%; background: linear-gradient(135deg, var(--accent-todo), var(--accent-idea)); }
+        .auth-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 18px; flex-wrap: wrap; }
+        .auth-switch-btn, .ghost-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.9rem; padding: 0; }
+        .auth-switch-btn strong, .ghost-btn strong { color: var(--text-main); font-weight: 600; }
+        .auth-link-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+        .auth-message { min-height: 22px; margin-top: 12px; color: var(--text-muted); font-size: 0.88rem; }
+        .auth-message.error { color: #d35454; }
+        .auth-message.success { color: #2e8b57; }
+        .header-bar { width: 100%; max-width: 1100px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; animation: fadeInDown 0.5s ease; position: relative; z-index: 999; gap: 16px; }
+        .header-user { display: flex; align-items: center; gap: 10px; color: var(--text-muted); font-size: 0.9rem; flex-wrap: wrap; }
+        .header-user strong { color: var(--text-main); font-weight: 600; }
+        .custom-dropdown { position: relative; user-select: none; }
+        .dropdown-btn { padding: 8px 35px 8px 20px; border-radius: 20px; background-color: var(--glass-bg); backdrop-filter: blur(4px) saturate(200%); -webkit-backdrop-filter: blur(4px) saturate(200%); border: 1.5px solid var(--glass-border); color: var(--text-main); font-size: 0.85rem; font-weight: 600; cursor: pointer; box-shadow: var(--glass-shadow); transition: var(--spring-transition); position: relative; }
+        .dropdown-btn:hover { transform: translateY(-2px); background-color: rgba(255, 255, 255, 0.4); box-shadow: 0 14px 28px rgba(0,0,0,0.04); }
+        .dropdown-btn::after { content: ""; position: absolute; right: 16px; top: 52%; transform: translateY(-50%); border: 4px solid transparent; border-top-color: var(--text-muted); transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); }
+        .custom-dropdown.active .dropdown-btn::after { transform: translateY(-50%) rotate(180deg); }
+        .dropdown-menu { position: absolute; top: calc(100% + 8px); right: 0; background-color: var(--glass-bg); backdrop-filter: blur(5px) saturate(200%); -webkit-backdrop-filter: blur(5px) saturate(200%); border: 1.5px solid var(--glass-border); border-radius: var(--radius); box-shadow: var(--glass-shadow); width: 130px; padding: 6px; opacity: 0; visibility: hidden; transform: translateY(10px) scale(0.95); transition: opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1), transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), visibility 0.3s; }
+        .custom-dropdown.active .dropdown-menu { opacity: 1; visibility: visible; transform: translateY(0) scale(1); }
+        .dropdown-item { padding: 8px 14px; font-size: 0.85rem; color: var(--text-main); border-radius: calc(var(--radius) - 6px); cursor: pointer; transition: background-color 0.2s, color 0.2s; text-align: left; }
+        .dropdown-item:hover { background-color: var(--glass-hover); }
+        .dropdown-item.selected { font-weight: 700; background-color: var(--glass-hover); }
+        .container { width: 100%; max-width: 1100px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        @media (max-width: 768px) { .container { grid-template-columns: 1fr; gap: 20px; } .auth-card { padding: 30px 22px; } .header-bar { flex-direction: column; align-items: stretch; } .header-user { justify-content: space-between; } }
+        .panel { background: var(--card-bg); border-radius: var(--radius); padding: 30px; box-shadow: var(--shadow-md); display: flex; flex-direction: column; height: 78vh; min-height: 540px; position: relative; animation: fadeInUp 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+        h2 { font-size: 1.65rem; font-weight: 700; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px dashed var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .todo-title { color: var(--accent-todo); } .idea-title { color: var(--accent-idea); }
+        .panel-action-btn { font-size: 0.85rem; color: var(--text-muted); background: none; border: none; cursor: pointer; padding: 4px 10px; border-radius: 6px; font-weight: normal; transition: var(--spring-transition); }
+        .panel-action-btn:hover { color: var(--text-main); background-color: var(--bg-color); }
+        .input-group { display: flex; gap: 12px; margin-bottom: 24px; align-items: center; width: 100%; }
+        input[type="text"], textarea.unified-input { flex: 1; height: 44px; padding: 0 16px; line-height: 42px; border: 1px solid var(--border-color); border-radius: calc(var(--radius) - 4px); font-size: 0.95rem; outline: none; background-color: var(--bg-color); color: var(--text-main); resize: none; transition: var(--spring-transition); }
+        input[type="text"]:focus, textarea.unified-input:focus { border-color: var(--text-muted); transform: scale(1.01); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        textarea.unified-input { line-height: 1.4; padding-top: 11px; padding-bottom: 11px; height: 44px; overflow-y: hidden; }
+        textarea.unified-input::-webkit-scrollbar { display: none; width: 0 !important; height: 0 !important; }
+        button.main-btn { color: white; border: none; height: 44px; padding: 0 24px; border-radius: calc(var(--radius) - 4px); cursor: pointer; font-weight: 500; font-size: 0.95rem; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: var(--spring-transition); }
+        button.main-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(0,0,0,0.12); opacity: 0.95; }
+        button.main-btn:active { transform: scale(0.92); }
+        .todo-btn { background: var(--accent-todo); } .idea-btn { background: var(--accent-idea); }
+        .list-container { flex: 1; overflow-y: auto; padding-right: 4px; transition: var(--spring-transition); }
+        .list-container.view-changing { opacity: 0; transform: scale(0.98); }
+        .list-container::-webkit-scrollbar { width: 4px; }
+        .list-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        .item-card { display: flex; align-items: center; justify-content: space-between; padding: 14px 4px; border-bottom: 1px solid var(--border-color); background-color: transparent; animation: var(--jelly-animation); }
+        .todo-item { cursor: grab; } .todo-item:active { cursor: grabbing; }
+        .drag-placeholder { height: 52px; background-color: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: calc(var(--radius) - 4px); margin: 4px 0; box-sizing: border-box; opacity: 0.5; box-shadow: inset 0 2px 10px rgba(0,0,0,0.05); animation: expandSpace 0.2s cubic-bezier(0.25, 1, 0.5, 1); }
+        @keyframes expandSpace { from { height: 0; opacity: 0; margin: 0; } to { height: 52px; opacity: 0.5; margin: 4px 0; } }
+        .todo-item.completed .todo-text, .todo-item.completed .todo-seq { text-decoration: line-through; color: var(--text-muted); opacity: 0.5; }
+        .todo-content { display: flex; align-items: center; gap: 12px; flex: 1; pointer-events: none; }
+        .todo-content input[type="checkbox"], .todo-content .todo-text-container { pointer-events: auto; }
+        .todo-info-wrapper { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+        .todo-text-container { display: flex; gap: 6px; align-items: center; flex: 1; }
+        .inline-edit-input { width: 100%; border: 1px solid var(--text-muted); border-radius: 4px; padding: 2px 8px; font-size: 0.95rem; color: var(--text-main); background-color: var(--bg-color); outline: none; }
+        .todo-seq { font-weight: 700; color: var(--accent-todo); opacity: 0.9; font-size: 0.95rem; min-width: 22px; display: inline-block; user-select: none; }
+        .todo-text { cursor: text; }
+        .timestamp { font-size: 0.75rem; color: var(--text-muted); user-select: none; }
+        .todo-content input[type="checkbox"] { width: 17px; height: 17px; cursor: pointer; accent-color: var(--accent-todo); transition: var(--spring-transition); }
+        .todo-content input[type="checkbox"]:active { transform: scale(0.7); }
+        .idea-card { background: var(--bg-color); border-left: 4px solid var(--accent-idea); padding: 16px; margin-bottom: 12px; border-radius: calc(var(--radius) - 4px); animation: var(--jelly-animation); transition: transform 0.2s; }
+        .idea-card:hover { transform: translateX(2px); }
+        .idea-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; user-select: none; }
+        .idea-text { font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; word-break: break-all; cursor: text; }
+        .inline-edit-textarea { width: 100%; min-height: 60px; border: 1px solid var(--text-muted); border-radius: 6px; padding: 6px 10px; font-size: 0.95rem; line-height: 1.6; color: var(--text-main); background-color: var(--card-bg); outline: none; resize: vertical; }
+        .action-text-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem; padding: 4px 8px; border-radius: 4px; transition: var(--spring-transition); }
+        .action-text-btn:hover { color: #e74c3c; background: rgba(231, 76, 60, 0.08); }
+        .restore-btn:hover { color: var(--accent-todo); background: rgba(52, 152, 219, 0.08); }
+        @keyframes springIn { from { opacity: 0; transform: translateY(20px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        .empty-tip { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 40px; opacity: 0.5; animation: springIn 0.5s ease; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-shell" id="auth-shell">
+        <div class="auth-card">
+            <div class="auth-eyebrow">随心工作台</div>
+            <h1 id="auth-title">邮箱登录</h1>
+            <p class="auth-subtitle" id="auth-subtitle">先用邮箱进入你的工作台。风格和当前页面保持一致，操作也尽量轻一点。</p>
+            <div class="auth-form">
+                <input type="email" id="auth-email" placeholder="输入邮箱地址">
+                <input type="password" id="auth-password" placeholder="输入密码" onkeydown="if(event.key==='Enter') handleAuthSubmit()">
+                <button class="main-btn auth-submit-btn" id="auth-submit-btn" onclick="handleAuthSubmit()">立即登录</button>
+            </div>
+            <div class="auth-footer">
+                <button class="auth-switch-btn" id="auth-switch-btn" onclick="toggleAuthMode()">没有账号？<strong>去注册</strong></button>
+                <button class="ghost-btn" id="auth-magic-btn" onclick="sendMagicLink()">发送邮箱登录链接</button>
+            </div>
+            <div class="auth-link-row">
+                <button class="ghost-btn" id="auth-resend-btn" onclick="resendConfirmation()">重新发送确认邮件</button>
+            </div>
+            <div class="auth-message" id="auth-message"></div>
+        </div>
+    </div>
+
+    <div class="app-shell hidden" id="app-shell">
+        <div class="header-bar">
+            <div class="header-user">
+                <span>已登录：</span>
+                <strong id="user-email">-</strong>
+                <button class="panel-action-btn" onclick="signOut()">退出登录</button>
+            </div>
+            <div class="custom-dropdown" id="theme-dropdown">
+                <div class="dropdown-btn" id="dropdown-title" onclick="toggleDropdown(event)">简约浅灰</div>
+                <div class="dropdown-menu">
+                    <div class="dropdown-item" data-value="light" onclick="selectTheme('light', '简约浅灰')">简约浅灰</div>
+                    <div class="dropdown-item" data-value="cute-pink" onclick="selectTheme('cute-pink', '温柔甜妹')">温柔甜妹</div>
+                    <div class="dropdown-item" data-value="dark" onclick="selectTheme('dark', '优雅深色')">优雅深色</div>
+                    <div class="dropdown-item" data-value="forest" onclick="selectTheme('forest', '复古森林')">复古森林</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="panel">
+                <h2 class="todo-title">
+                    <span id="todo-panel-title">每日待办</span>
+                    <button class="panel-action-btn" id="todo-trash-toggle" onclick="toggleTodoTrash()">回收站</button>
+                </h2>
+                
+                <div class="input-group" id="todo-input-zone">
+                    <input type="text" id="todo-input" placeholder="输入今天的任务..." onkeydown="if(event.key==='Enter') addTodo()">
+                    <button class="main-btn todo-btn" onclick="addTodo()">添加</button>
+                </div>
+                
+                <div class="list-container" id="todo-list"></div>
+            </div>
+
+            <div class="panel">
+                <h2 class="idea-title">
+                    <span id="idea-panel-title">灵感闪现</span>
+                    <button class="panel-action-btn" id="idea-trash-toggle" onclick="toggleIdeaTrash()">回收站</button>
+                </h2>
+                
+                <div class="input-group" id="idea-input-zone">
+                    <textarea class="unified-input" id="idea-input" placeholder="捕捉瞬间的想法... Ctrl+Enter 提交"></textarea>
+                    <button class="main-btn idea-btn" onclick="addIdea()">记录</button>
+                </div>
+                
+                <div class="list-container" id="idea-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 🟢 核心数据存储 (活动数据走云端 Supabase，回收站数据保留在本地防止增加数据库负担)
+        let todos = [];
+        let ideas = [];
+        let todoTrash = JSON.parse(localStorage.getItem('my_todo_trash')) || [];
+        let ideaTrash = JSON.parse(localStorage.getItem('my_idea_trash')) || [];
+        let currentTheme = localStorage.getItem('my_theme') || 'light';
+        let currentUser = null;
+        let isAuthLoginMode = true;
+
+        const themeNamesMap = { 'light': '简约浅灰', 'cute-pink': '温柔甜妹', 'dark': '优雅深色', 'forest': '复古森林' };
+        let isTodoTrashView = false; let isIdeaTrashView = false;
+        let draggedTodoId = null; let isEditingMode = false; 
+
+        const dragPlaceholder = document.createElement('div');
+        dragPlaceholder.className = 'drag-placeholder';
+
+        window.onload = async function() {
+            initTheme(currentTheme);
+            setupDragAndDrop();
+            setupGlobalEvents();
+            syncAuthCopy();
+
+            await handleAuthCallback();
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            handleAuthState(session ? session.user : null);
+
+            supabaseClient.auth.onAuthStateChange((_event, session) => {
+                handleAuthState(session ? session.user : null);
+            });
+        };
+
+        function setupGlobalEvents() {
+            document.addEventListener('click', function(event) {
+                const dropdown = document.getElementById('theme-dropdown');
+                if (dropdown && !dropdown.contains(event.target)) {
+                    dropdown.classList.remove('active');
+                }
+            });
+
+            const ideaInput = document.getElementById('idea-input');
+            if (ideaInput) {
+                ideaInput.addEventListener('keydown', function(e) {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); addIdea(); }
+                });
+            }
+        }
+
+        function handleAuthState(user) {
+            currentUser = user;
+            const authShell = document.getElementById('auth-shell');
+            const appShell = document.getElementById('app-shell');
+            const userEmail = document.getElementById('user-email');
+
+            if (user) {
+                authShell.classList.add('hidden');
+                appShell.classList.remove('hidden');
+                userEmail.innerText = user.email || '未命名邮箱';
+                setAuthMessage('');
+                loadDataFromSupabase();
+            } else {
+                authShell.classList.remove('hidden');
+                appShell.classList.add('hidden');
+                userEmail.innerText = '-';
+                todos = [];
+                ideas = [];
+                renderTodos();
+                renderIdeas();
+            }
+        }
+
+        function syncAuthCopy() {
+            document.getElementById('auth-title').innerText = isAuthLoginMode ? '邮箱登录' : '邮箱注册';
+            document.getElementById('auth-subtitle').innerText = isAuthLoginMode
+                ? '先用邮箱进入你的工作台。风格和当前页面保持一致，操作也尽量轻一点。'
+                : '注册一个邮箱账号后，就能继续使用这套简洁的随心工作台。';
+            document.getElementById('auth-submit-btn').innerText = isAuthLoginMode ? '立即登录' : '创建账号';
+            document.getElementById('auth-switch-btn').innerHTML = isAuthLoginMode
+                ? '没有账号？<strong>去注册</strong>'
+                : '已有账号？<strong>去登录</strong>';
+            document.getElementById('auth-magic-btn').style.display = isAuthLoginMode ? 'inline-block' : 'none';
+            document.getElementById('auth-resend-btn').style.display = isAuthLoginMode ? 'none' : 'inline-block';
+            setAuthMessage('');
+        }
+
+        function toggleAuthMode() {
+            isAuthLoginMode = !isAuthLoginMode;
+            syncAuthCopy();
+        }
+
+        function setAuthMessage(message, type = '') {
+            const el = document.getElementById('auth-message');
+            el.className = type ? `auth-message ${type}` : 'auth-message';
+            el.innerText = message;
+        }
+
+        function getAuthFormValue() {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+            return { email, password };
+        }
+
+        function getRedirectUrl() {
+            if (window.location.origin && window.location.origin !== 'null') {
+                return `${window.location.origin}${window.location.pathname}`;
+            }
+            return window.location.href.split('?')[0].split('#')[0];
+        }
+
+        async function handleAuthCallback() {
+            const url = new URL(window.location.href);
+            const code = url.searchParams.get('code');
+            const tokenHash = url.searchParams.get('token_hash');
+            const authType = url.searchParams.get('type');
+            const errorDescription = url.searchParams.get('error_description');
+
+            if (errorDescription) {
+                setAuthMessage(decodeURIComponent(errorDescription), 'error');
+                return;
+            }
+
+            if (!code && !tokenHash) return;
+
+            let authError = null;
+            if (code) {
+                const result = await supabaseClient.auth.exchangeCodeForSession(code);
+                authError = result.error;
+            } else {
+                const result = await supabaseClient.auth.verifyOtp({
+                    token_hash: tokenHash,
+                    type: authType || 'email'
+                });
+                authError = result.error;
+            }
+
+            if (authError) {
+                setAuthMessage(authError.message || '邮箱确认失败，请重试。', 'error');
+                return;
+            }
+
+            url.searchParams.delete('code');
+            url.searchParams.delete('token_hash');
+            url.searchParams.delete('state');
+            url.searchParams.delete('type');
+            window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+            setAuthMessage('邮箱已确认，正在进入工作台...', 'success');
+        }
+
+        async function handleAuthSubmit() {
+            const { email, password } = getAuthFormValue();
+            if (!email || !password) {
+                setAuthMessage('请先输入邮箱和密码。', 'error');
+                return;
+            }
+
+            setAuthMessage(isAuthLoginMode ? '正在登录...' : '正在创建账号...');
+
+            if (isAuthLoginMode) {
+                const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                if (error) {
+                    setAuthMessage(error.message || '登录失败，请稍后再试。', 'error');
+                    return;
+                }
+                setAuthMessage('登录成功。', 'success');
+            } else {
+                const { error } = await supabaseClient.auth.signUp({
+                    email,
+                    password,
+                    options: { emailRedirectTo: getRedirectUrl() }
+                });
+                if (error) {
+                    setAuthMessage(error.message || '注册失败，请稍后再试。', 'error');
+                    return;
+                }
+                setAuthMessage('已发送确认邮件，请前往邮箱完成确认。确认后会自动回到这里。', 'success');
+            }
+        }
+
+        async function sendMagicLink() {
+            const { email } = getAuthFormValue();
+            if (!email) {
+                setAuthMessage('先输入邮箱，再发送登录链接。', 'error');
+                return;
+            }
+
+            setAuthMessage('正在发送登录链接...');
+            const { error } = await supabaseClient.auth.signInWithOtp({
+                email,
+                options: { emailRedirectTo: getRedirectUrl() }
+            });
+            if (error) {
+                setAuthMessage(error.message || '发送失败，请稍后再试。', 'error');
+                return;
+            }
+            setAuthMessage('已发送登录链接，请打开邮箱点击链接后自动返回。', 'success');
+        }
+
+        async function resendConfirmation() {
+            const { email } = getAuthFormValue();
+            if (!email) {
+                setAuthMessage('先输入邮箱，再重新发送确认邮件。', 'error');
+                return;
+            }
+
+            setAuthMessage('正在重新发送确认邮件...');
+            const { error } = await supabaseClient.auth.resend({
+                type: 'signup',
+                email,
+                options: { emailRedirectTo: getRedirectUrl() }
+            });
+            if (error) {
+                setAuthMessage(error.message || '发送失败，请稍后再试。', 'error');
+                return;
+            }
+            setAuthMessage('已重新发送确认邮件，请检查邮箱。', 'success');
+        }
+
+        async function signOut() {
+            const { error } = await supabaseClient.auth.signOut();
+            if (error) {
+                setAuthMessage(error.message || '退出失败，请稍后再试。', 'error');
+                return;
+            }
+            document.getElementById('auth-password').value = '';
+            setAuthMessage('你已退出登录。', 'success');
+        }
+
+        // 🟢 从 Supabase 云端拉取最新数据
+        async function loadDataFromSupabase() {
+            if (!currentUser) return;
+            // 拉取待办：按完成状态排序(未完成在前)，再按拖拽序号(order_index)排序
+            const { data: todoData } = await supabaseClient.from('todos')
+                .select('*')
+                .order('is_completed', { ascending: true })
+                .order('order_index', { ascending: true });
+            
+            // 拉取灵感：按创建时间倒序排列(最新的在最上)
+            const { data: ideaData } = await supabaseClient.from('ideas')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (todoData) todos = todoData;
+            if (ideaData) ideas = ideaData;
+            
+            renderTodos();
+            renderIdeas();
+        }
+
+        // --- 零抖动的实体占位符拖拽算法 (已对接云端更新) ---
+        function setupDragAndDrop() {
+            const listEl = document.getElementById('todo-list');
+
+            listEl.addEventListener('dragstart', (e) => {
+                const card = e.target.closest('.todo-item');
+                if(!card || isTodoTrashView || isEditingMode) { e.preventDefault(); return; }
+                draggedTodoId = parseInt(card.dataset.id);
+                setTimeout(() => { card.style.display = 'none'; card.parentNode.insertBefore(dragPlaceholder, card); }, 0);
+            });
+
+            listEl.addEventListener('dragover', (e) => {
+                e.preventDefault(); 
+                const targetCard = e.target.closest('.todo-item');
+                if (targetCard && targetCard.dataset.id != draggedTodoId && !isTodoTrashView) {
+                    const rect = targetCard.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+                    if (e.clientY < midY) {
+                        targetCard.parentNode.insertBefore(dragPlaceholder, targetCard);
+                    } else {
+                        targetCard.parentNode.insertBefore(dragPlaceholder, targetCard.nextSibling);
+                    }
+                }
+            });
+
+            listEl.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if(isTodoTrashView || !draggedTodoId) return;
+                const draggedElement = document.querySelector(`[data-id="${draggedTodoId}"]`);
+                if(draggedElement && dragPlaceholder.parentNode) {
+                    dragPlaceholder.parentNode.insertBefore(draggedElement, dragPlaceholder);
+                }
+            });
+
+            listEl.addEventListener('dragend', async (e) => {
+                if (dragPlaceholder.parentNode) dragPlaceholder.parentNode.removeChild(dragPlaceholder);
+                const draggedElement = document.querySelector(`[data-id="${draggedTodoId}"]`);
+                if (draggedElement) draggedElement.style.display = '';
+
+                // 🟢 拖拽结束后，获取新的排序索引并批量更新至 Supabase
+                const updates = [];
+                const currentDOMElements = document.querySelectorAll('#todo-list .todo-item');
+                currentDOMElements.forEach((el, index) => {
+                    const id = parseInt(el.dataset.id);
+                    updates.push(supabaseClient.from('todos').update({ order_index: index }).eq('id', id));
+                });
+                
+                await Promise.all(updates);
+                loadDataFromSupabase(); // 重新拉取以确保一致性
+                draggedTodoId = null;
+            });
+        }
+
+        // --- 👑 就地双击编辑逻辑 (对接云端) ---
+        function startEditTodo(id, textSpan) {
+            if(isTodoTrashView) return; 
+            isEditingMode = true;
+            const itemCard = textSpan.closest('.todo-item');
+            if(itemCard) itemCard.setAttribute('draggable', 'false');
+
+            const currentText = textSpan.innerText;
+            const input = document.createElement('input');
+            input.type = 'text'; input.className = 'inline-edit-input'; input.value = currentText;
+            textSpan.replaceWith(input); input.focus();
+
+            const finishEdit = async () => {
+                if (!isEditingMode) return;
+                const updatedText = input.value.trim();
+                if (updatedText && updatedText !== currentText) {
+                    await supabaseClient.from('todos').update({ text: updatedText }).eq('id', id);
+                }
+                isEditingMode = false;
+                loadDataFromSupabase();
+            };
+
+            input.addEventListener('blur', finishEdit);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') finishEdit();
+                if (e.key === 'Escape') { isEditingMode = false; renderTodos(); }
+            });
+        }
+
+        function startEditIdea(id, textDiv) {
+            if(isIdeaTrashView) return;
+            isEditingMode = true;
+            const currentText = textDiv.innerText;
+            const textarea = document.createElement('textarea');
+            textarea.className = 'inline-edit-textarea'; textarea.value = currentText;
+            textDiv.replaceWith(textarea); textarea.focus();
+
+            const finishEdit = async () => {
+                if (!isEditingMode) return;
+                const updatedText = textarea.value.trim();
+                if (updatedText && updatedText !== currentText) {
+                    await supabaseClient.from('ideas').update({ text: updatedText }).eq('id', id);
+                }
+                isEditingMode = false;
+                loadDataFromSupabase();
+            };
+
+            textarea.addEventListener('blur', finishEdit);
+            textarea.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') finishEdit();
+                if (e.key === 'Escape') { isEditingMode = false; renderIdeas(); }
+            });
+        }
+
+        // --- UI 及其他控制 ---
+        function toggleDropdown(event) { event.stopPropagation(); document.getElementById('theme-dropdown').classList.toggle('active'); }
+        function initTheme(themeName) { document.documentElement.setAttribute('data-theme', themeName); document.getElementById('dropdown-title').innerText = themeNamesMap[themeName] || '简约浅灰'; updateDropdownHighlight(themeName); }
+        function selectTheme(themeName, themeText) { document.documentElement.setAttribute('data-theme', themeName); document.getElementById('dropdown-title').innerText = themeText; localStorage.setItem('my_theme', themeName); updateDropdownHighlight(themeName); }
+        function updateDropdownHighlight(themeName) { const items = document.querySelectorAll('.dropdown-item'); items.forEach(item => { if(item.getAttribute('data-value') === themeName) { item.classList.add('selected'); } else { item.classList.remove('selected'); } }); }
+        
+        function formatTime(timestampString) {
+            if (!timestampString) return '未知';
+            const date = new Date(timestampString);
+            return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+        }
+
+        function triggerViewTransition(containerId, renderFn) {
+            const container = document.getElementById(containerId);
+            container.classList.add('view-changing');
+            setTimeout(() => { renderFn(); container.classList.remove('view-changing'); }, 180);
+        }
+
+        // --- 渲染模块 ---
+        function renderTodos() {
+            const list = document.getElementById('todo-list');
+            list.innerHTML = '';
+
+            if (isTodoTrashView) {
+                if(todoTrash.length === 0) { list.innerHTML = '<div class="empty-tip">回收站空空如也</div>'; return; }
+                todoTrash.forEach(item => {
+                    const el = document.createElement('div'); el.className = 'item-card';
+                    el.innerHTML = `
+                        <div class="todo-info-wrapper">
+                            <span style="color: var(--text-muted); font-size:0.95rem;">${escapeHtml(item.text)}</span>
+                            <span class="timestamp">创建于 ${item.time || '未知'}</span>
+                        </div>
+                        <div>
+                            <button class="action-text-btn restore-btn" onclick="restoreTodo(${item.id})">还原</button>
+                            <button class="action-text-btn" onclick="burnTodo(${item.id})">粉碎</button>
+                        </div>
+                    `;
+                    list.appendChild(el);
+                });
+            } else {
+                if(todos.length === 0) { list.innerHTML = '<div class="empty-tip">今天还没有安排任务</div>'; return; }
+                todos.forEach((todo, index) => {
+                    const el = document.createElement('div');
+                    el.className = `item-card todo-item ${todo.is_completed ? 'completed' : ''}`;
+                    el.setAttribute('draggable', 'true'); el.dataset.id = todo.id;
+                    el.innerHTML = `
+                        <div class="todo-content">
+                            <input type="checkbox" ${todo.is_completed ? 'checked' : ''} onclick="toggleTodo(${todo.id}, ${todo.is_completed})">
+                            <div class="todo-info-wrapper">
+                                <div class="todo-text-container">
+                                    <span class="todo-seq">${index + 1}.</span>
+                                    <span class="todo-text" ondblclick="startEditTodo(${todo.id}, this)">${escapeHtml(todo.text)}</span>
+                                </div>
+                                <span class="timestamp">创建于 ${formatTime(todo.created_at)}</span>
+                            </div>
+                        </div>
+                        <button class="action-text-btn" onclick="trashTodo(${todo.id})" style="position:relative; z-index:2;">删除</button>
+                    `;
+                    list.appendChild(el);
+                });
+            }
+        }
+
+        // 🟢 Supabase 写入：添加任务
+        async function addTodo() {
+            const input = document.getElementById('todo-input');
+            const text = input.value.trim();
+            if (!text) return;
+            await supabaseClient.from('todos').insert([{ text: text, is_completed: false, order_index: todos.length }]);
+            input.value = '';
+            loadDataFromSupabase();
+        }
+
+        // 🟢 Supabase 写入：切换完成状态
+        async function toggleTodo(id, currentStatus) {
+            await supabaseClient.from('todos').update({ is_completed: !currentStatus }).eq('id', id);
+            loadDataFromSupabase();
+        }
+
+        // 🟢 Supabase -> 本地回收站：删除任务
+        async function trashTodo(id) {
+            const target = todos.find(t => t.id === id);
+            if(target) {
+                todoTrash.push({ id: target.id, text: target.text, time: formatTime(target.created_at), is_completed: target.is_completed });
+                localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
+                await supabaseClient.from('todos').delete().eq('id', id);
+                loadDataFromSupabase();
+            }
+        }
+
+        // 🟢 本地回收站 -> Supabase：还原任务
+        async function restoreTodo(id) {
+            const target = todoTrash.find(t => t.id === id);
+            if(target) {
+                await supabaseClient.from('todos').insert([{ text: target.text, is_completed: target.is_completed, order_index: todos.length }]);
+                todoTrash = todoTrash.filter(t => t.id !== id);
+                localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
+                loadDataFromSupabase();
+            }
+        }
+
+        function burnTodo(id) {
+            todoTrash = todoTrash.filter(t => t.id !== id);
+            localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
+            renderTodos();
+        }
+
+        function toggleTodoTrash() {
+            isTodoTrashView = !isTodoTrashView;
+            document.getElementById('todo-input-zone').style.display = isTodoTrashView ? 'none' : 'flex';
+            document.getElementById('todo-panel-title').innerText = isTodoTrashView ? '待办 · 回收站' : '每日待办';
+            document.getElementById('todo-trash-toggle').innerText = isTodoTrashView ? '返回列表' : '回收站';
+            triggerViewTransition('todo-list', renderTodos);
+        }
+
+        // --- 灵感渲染 ---
+        function renderIdeas() {
+            const list = document.getElementById('idea-list'); list.innerHTML = '';
+            if (isIdeaTrashView) {
+                if(ideaTrash.length === 0) { list.innerHTML = '<div class="empty-tip">回收站空空如也</div>'; return; }
+                ideaTrash.forEach(item => {
+                    const el = document.createElement('div'); el.className = 'idea-card'; el.style.opacity = '0.6';
+                    el.innerHTML = `
+                        <div class="idea-header">
+                            <span class="timestamp">创建于 ${item.time || '未知'}</span>
+                            <div>
+                                <button class="action-text-btn restore-btn" onclick="restoreIdea(${item.id})">还原</button>
+                                <button class="action-text-btn" onclick="burnIdea(${item.id})">粉碎</button>
+                            </div>
+                        </div>
+                        <div class="idea-text">${escapeHtml(item.text)}</div>
+                    `;
+                    list.appendChild(el);
+                });
+            } else {
+                if(ideas.length === 0) { list.innerHTML = '<div class="empty-tip">捕捉一瞬间的火花</div>'; return; }
+                ideas.forEach(idea => {
+                    const el = document.createElement('div'); el.className = 'idea-card';
+                    el.innerHTML = `
+                        <div class="idea-header">
+                            <span class="timestamp">记录于 ${formatTime(idea.created_at)}</span>
+                            <button class="action-text-btn" onclick="trashIdea(${idea.id})">删除</button>
+                        </div>
+                        <div class="idea-text" ondblclick="startEditIdea(${idea.id}, this)">${escapeHtml(idea.text)}</div>
+                    `;
+                    list.appendChild(el);
+                });
+            }
+        }
+
+        // 🟢 Supabase 写入：添加灵感
+        async function addIdea() {
+            const input = document.getElementById('idea-input'); const text = input.value.trim(); if (!text) return;
+            await supabaseClient.from('ideas').insert([{ text: text }]);
+            input.value = ''; loadDataFromSupabase();
+        }
+
+        // 🟢 Supabase -> 本地回收站：删除灵感
+        async function trashIdea(id) {
+            const target = ideas.find(i => i.id === id);
+            if(target) {
+                ideaTrash.push({ id: target.id, text: target.text, time: formatTime(target.created_at) });
+                localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
+                await supabaseClient.from('ideas').delete().eq('id', id);
+                loadDataFromSupabase();
+            }
+        }
+
+        // 🟢 本地回收站 -> Supabase：还原灵感
+        async function restoreIdea(id) {
+            const target = ideaTrash.find(i => i.id === id);
+            if(target) {
+                await supabaseClient.from('ideas').insert([{ text: target.text }]);
+                ideaTrash = ideaTrash.filter(i => i.id !== id);
+                localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
+                loadDataFromSupabase();
+            }
+        }
+
+        function burnIdea(id) {
+            ideaTrash = ideaTrash.filter(i => i.id !== id);
+            localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
+            renderIdeas();
+        }
+
+        function toggleIdeaTrash() {
+            isIdeaTrashView = !isIdeaTrashView;
+            document.getElementById('idea-input-zone').style.display = isIdeaTrashView ? 'none' : 'flex';
+            document.getElementById('idea-panel-title').innerText = isIdeaTrashView ? '灵感 · 回收站' : '灵感闪现';
+            document.getElementById('idea-trash-toggle').innerText = isIdeaTrashView ? '返回列表' : '回收站';
+            triggerViewTransition('idea-list', renderIdeas);
+        }
+
+        function escapeHtml(text) {
+            const map = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'};
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+    </script>
+</body>
+</html>
+
