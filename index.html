@@ -206,7 +206,8 @@
         .auth-message.success { color: #22c55e; }
 
         .header-bar { width: 100%; max-width: 1140px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 36px; position: relative; z-index: 100; gap: 16px; animation: headerSlideIn 0.7s var(--transition-elastic); }
-        .app-title { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(135deg, var(--accent-todo), var(--accent-idea)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .app-title { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(90deg, var(--accent-todo), var(--accent-idea), var(--accent-todo)); background-size: 200% 100%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: titleFlow 4s linear infinite; }
+        @keyframes titleFlow { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
         .header-right-group { display: flex; align-items: center; gap: 16px; }
         .header-user { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted); }
         .header-user strong { color: var(--text-main); font-weight: 600; }
@@ -221,7 +222,7 @@
         .custom-dropdown.active .dropdown-btn::after { transform: translateY(-50%) rotate(180deg); }
         .dropdown-menu { position: absolute; top: calc(100% + 8px); right: 0; background-color: var(--glass-bg); backdrop-filter: blur(5px) saturate(200%); -webkit-backdrop-filter: blur(5px) saturate(200%); border: 1.5px solid var(--glass-border); border-radius: var(--radius); box-shadow: var(--glass-shadow); width: 130px; padding: 6px; opacity: 0; pointer-events: none; transform: translateY(10px) scale(0.95); transition: opacity 0.3s var(--transition-elastic), transform 0.3s var(--transition-elastic); }
         .custom-dropdown.active .dropdown-menu { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
-        .dropdown-item { padding: 8px 14px; font-size: 0.85rem; color: var(--text-main); border-radius: calc(var(--radius) - 6px); cursor: pointer; transition: background-color 0.2s; text-align: left; }
+        .dropdown-item { padding: 8px 14px; font-size: 0.85rem; color: var(--text-main); border-radius: calc(var(--radius) - 6px); cursor: pointer; transition: background-color 0.2s; text-align: center; }
         .dropdown-item:hover { background-color: var(--glass-hover); }
         .dropdown-item.selected { font-weight: 700; background-color: var(--glass-hover); }
 
@@ -279,7 +280,17 @@
         .list-container::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
         .list-container::-webkit-scrollbar-thumb:hover { background: var(--accent-todo); }
 
-        .item-card { display: flex; align-items: center; justify-content: space-between; padding: 14px 8px; border-bottom: 1px solid var(--border-color); background-color: transparent; animation: cardEnter 0.45s var(--transition-spring) both; transition: background-color 0.25s ease, border-color 0.6s ease; }
+        .item-card { display: flex; align-items: center; justify-content: space-between; padding: 14px 8px; border-bottom: 1px solid var(--border-color); background-color: transparent; animation: cardEnter 0.45s var(--transition-spring) both; transition: background-color 0.25s ease, border-color 0.6s ease, opacity 0.35s ease; }
+        .item-card.removing { animation: strikethroughOut 0.5s var(--transition-smooth) forwards; }
+        @keyframes strikethroughOut {
+            0% { opacity: 1; transform: translateX(0); }
+            30% { opacity: 1; transform: translateX(0); }
+            60% { opacity: 0.6; transform: translateX(6px); }
+            100% { opacity: 0; transform: translateX(20px); max-height: 0; padding: 0 8px; margin: 0; overflow: hidden; }
+        }
+        .item-card.removing .todo-text { position: relative; }
+        .item-card.removing .todo-text::after { content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 2px; background: var(--accent-todo); animation: lineAcross 0.45s var(--transition-smooth) forwards; transform: translateX(-100%); }
+        @keyframes lineAcross { 0% { transform: translateX(-100%); } 100% { transform: translateX(0); } }
         .item-card:hover { background: var(--card-hover-bg); }
         @keyframes cardEnter { from { opacity: 0; transform: translateY(16px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .todo-item { cursor: grab; }
@@ -301,7 +312,16 @@
         .todo-content input[type="checkbox"]:checked::after { content: ''; position: absolute; left: 5px; top: 2px; width: 5px; height: 9px; border: solid white; border-width: 0 2px 2px 0; transform: rotate(45deg); }
         .todo-content input[type="checkbox"]:active { transform: scale(0.75); }
 
-        .idea-card { background: var(--input-bg); border-left: 3px solid var(--accent-idea); padding: 16px 18px; margin-bottom: 12px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; animation: cardEnter 0.45s var(--transition-spring) both; transition: all 0.3s var(--transition-elastic), background 0.6s ease, border-color 0.6s ease; position: relative; }
+        .idea-card { background: var(--input-bg); border-left: 3px solid var(--accent-idea); padding: 16px 18px; margin-bottom: 12px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; animation: cardEnter 0.45s var(--transition-spring) both; transition: all 0.3s var(--transition-elastic), background 0.6s ease, border-color 0.6s ease, opacity 0.35s ease; position: relative; }
+        .idea-card.removing { animation: ideaStrikethroughOut 0.5s var(--transition-smooth) forwards; }
+        @keyframes ideaStrikethroughOut {
+            0% { opacity: 1; transform: translateX(0); }
+            30% { opacity: 1; transform: translateX(0); }
+            60% { opacity: 0.6; transform: translateX(6px); }
+            100% { opacity: 0; transform: translateX(20px); max-height: 0; padding: 0 18px; margin: 0; overflow: hidden; }
+        }
+        .idea-card.removing .idea-text { position: relative; }
+        .idea-card.removing .idea-text::after { content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 2px; background: var(--accent-idea); animation: lineAcross 0.45s var(--transition-smooth) forwards; transform: translateX(-100%); }
         .idea-card::before { content: ''; position: absolute; left: 3px; top: 0; bottom: 0; width: 0; background: var(--accent-idea-glow); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; transition: width 0.4s var(--transition-elastic), background 0.6s ease; }
         .idea-card:hover { transform: translateX(4px); box-shadow: -4px 0 20px var(--accent-idea-glow); }
         .idea-card:hover::before { width: 100%; left: 0; }
@@ -797,6 +817,12 @@
             const idx = todos.findIndex(t => t.id === id);
             if (idx === -1) return;
             const t = todos[idx];
+            // 播放删除动画
+            const cardEl = document.querySelector(`.todo-item[data-id="${id}"]`);
+            if (cardEl) {
+                cardEl.classList.add('removing');
+                await new Promise(r => setTimeout(r, 500));
+            }
             // 乐观：先移入回收站、从列表删除、重新渲染
             todoTrash.push({ id: t.id, text: t.text, time: formatTime(t.created_at), is_completed: t.is_completed });
             localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
@@ -878,6 +904,13 @@
             const idx = ideas.findIndex(x => x.id === id);
             if (idx === -1) return;
             const t = ideas[idx];
+            // 播放删除动画
+            const cards = document.querySelectorAll('.idea-card');
+            const cardEl = cards[idx];
+            if (cardEl) {
+                cardEl.classList.add('removing');
+                await new Promise(r => setTimeout(r, 500));
+            }
             ideaTrash.push({ id: t.id, text: t.text, time: formatTime(t.created_at) });
             localStorage.setItem('my_idea_trash', JSON.stringify(ideaTrash));
             ideas.splice(idx, 1);
