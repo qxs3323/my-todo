@@ -182,7 +182,7 @@
             box-shadow: var(--panel-shadow); animation: panelReveal 0.65s var(--transition-elastic) both;
             transition: background 0.8s ease, border-color 0.8s ease, box-shadow 0.8s ease;
         }
-        .auth-eyebrow { font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent-todo); margin-bottom: 8px; font-weight: 600; }
+        .auth-eyebrow { font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; background: linear-gradient(90deg, var(--accent-todo), var(--accent-idea), var(--accent-todo)); background-size: 200% 100%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: titleFlow 4s linear infinite; margin-bottom: 8px; font-weight: 600; }
         .auth-card h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
         .auth-subtitle { color: var(--text-muted); line-height: 1.7; font-size: 0.9rem; margin-bottom: 28px; }
         .auth-form { display: flex; flex-direction: column; gap: 14px; }
@@ -288,16 +288,17 @@
             60% { opacity: 0.6; transform: translateX(6px); }
             100% { opacity: 0; transform: translateX(20px); max-height: 0; padding: 0 8px; margin: 0; overflow: hidden; }
         }
-        .item-card.removing .todo-text { position: relative; }
-        .item-card.removing .todo-text::after { content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 2px; background: var(--accent-todo); animation: lineAcross 0.45s var(--transition-smooth) forwards; transform: translateX(-100%); }
-        @keyframes lineAcross { 0% { transform: translateX(-100%); } 100% { transform: translateX(0); } }
         .item-card:hover { background: var(--card-hover-bg); }
         @keyframes cardEnter { from { opacity: 0; transform: translateY(16px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .todo-item { cursor: grab; }
         .todo-item:active { cursor: grabbing; }
         .drag-placeholder { height: 52px; background: var(--accent-todo-glow); border: 2px dashed var(--accent-todo); border-radius: var(--radius-sm); margin: 4px 0; opacity: 0.4; animation: placeholderPulse 1.2s ease-in-out infinite; }
         @keyframes placeholderPulse { 0%,100% { opacity: 0.3; } 50% { opacity: 0.55; } }
-        .todo-item.completed .todo-text, .todo-item.completed .todo-seq { text-decoration: line-through; color: var(--text-muted); opacity: 0.5; }
+        .todo-item.completed .todo-text { position: relative; color: var(--text-muted); opacity: 0.5; }
+        .todo-item.completed .todo-text::after { content: ''; position: absolute; left: 0; top: 50%; width: 100%; height: 2px; background: var(--accent-todo); transform: scaleX(1); transform-origin: left; }
+        .todo-item.completed .todo-seq { color: var(--text-muted); opacity: 0.5; }
+        .todo-item.completed.strike-anim .todo-text::after { animation: strikethroughDraw 0.5s var(--transition-smooth) forwards; }
+        @keyframes strikethroughDraw { 0% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
         .todo-content { display: flex; align-items: center; gap: 12px; flex: 1; pointer-events: none; }
         .todo-content input[type="checkbox"], .todo-content .todo-text-container { pointer-events: auto; }
         .todo-info-wrapper { display: flex; flex-direction: column; gap: 4px; flex: 1; }
@@ -451,6 +452,8 @@
         const themeNamesMap = { 'light': '简约浅灰', 'cute-pink': '温柔甜妹', 'dark': '优雅深色', 'forest': '复古森林' };
         let isTodoTrashView = false, isIdeaTrashView = false;
         let draggedTodoId = null, isEditingMode = false;
+        // 勾选完成时间记录 { id: timestamp_ms }
+        let todoCompletedTimes = JSON.parse(localStorage.getItem('todo_completed_times')) || {};
         const AUTH_RETURN_URL_KEY = 'my_auth_return_url';
         // 【修复 5】去重标记，防止 onAuthStateChange 重复触发
         let lastAuthUserId = null;
@@ -768,6 +771,10 @@
                 if (todoRes.data) todos = todoRes.data;
                 if (ideaRes.data) ideas = ideaRes.data;
                 renderTodos(); renderIdeas();
+                autoTrashExpiredTodos();
+                // 每5分钟检查一次是否有过期待办
+                if (window._autoTrashInterval) clearInterval(window._autoTrashInterval);
+                window._autoTrashInterval = setInterval(autoTrashExpiredTodos, 5 * 60 * 1000);
             } catch (err) {
                 console.error('加载数据失败:', err);
             }
@@ -804,6 +811,17 @@
             todo.is_completed = !cur;
             sortTodos();
             renderTodos();
+            if (!cur) {
+                // 记录完成时间
+                todoCompletedTimes[id] = Date.now();
+                localStorage.setItem('todo_completed_times', JSON.stringify(todoCompletedTimes));
+                const cardEl = document.querySelector(`.todo-item[data-id="${id}"]`);
+                if (cardEl) { cardEl.classList.add('strike-anim'); }
+            } else {
+                // 取消勾选，清除记录
+                delete todoCompletedTimes[id];
+                localStorage.setItem('todo_completed_times', JSON.stringify(todoCompletedTimes));
+            }
             const { error } = await supabaseClient.from('todos').update({ is_completed: !cur }).eq('id', id);
             if (error) {
                 todo.is_completed = prev;
@@ -811,6 +829,31 @@
                 renderTodos();
                 console.error('切换待办状态失败', error);
             }
+        }
+
+        async function autoTrashExpiredTodos() {
+            const now = Date.now();
+            const DAY_MS = 24 * 60 * 60 * 1000;
+            const expiredIds = [];
+            for (const idStr in todoCompletedTimes) {
+                const id = Number(idStr);
+                if (now - todoCompletedTimes[idStr] >= DAY_MS) {
+                    const t = todos.find(x => x.id === id);
+                    if (t) expiredIds.push(id);
+                    delete todoCompletedTimes[idStr];
+                }
+            }
+            localStorage.setItem('todo_completed_times', JSON.stringify(todoCompletedTimes));
+            for (const id of expiredIds) {
+                const idx = todos.findIndex(t => t.id === id);
+                if (idx === -1) continue;
+                const t = todos[idx];
+                todoTrash.push({ id: t.id, text: t.text, time: formatTime(t.created_at), is_completed: t.is_completed });
+                todos.splice(idx, 1);
+                localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
+                supabaseClient.from('todos').delete().eq('id', id);
+            }
+            if (expiredIds.length > 0) { sortTodos(); renderTodos(); }
         }
 
         async function trashTodo(id) {
@@ -826,6 +869,8 @@
             // 乐观：先移入回收站、从列表删除、重新渲染
             todoTrash.push({ id: t.id, text: t.text, time: formatTime(t.created_at), is_completed: t.is_completed });
             localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
+            delete todoCompletedTimes[id];
+            localStorage.setItem('todo_completed_times', JSON.stringify(todoCompletedTimes));
             todos.splice(idx, 1);
             renderTodos();
             const { error } = await supabaseClient.from('todos').delete().eq('id', id);
@@ -844,6 +889,9 @@
             const idx = todoTrash.findIndex(x => x.id === id);
             if (idx === -1) return;
             const t = todoTrash[idx];
+            // 清理旧完成时间记录
+            delete todoCompletedTimes[id];
+            localStorage.setItem('todo_completed_times', JSON.stringify(todoCompletedTimes));
             // 乐观：先从回收站移除
             todoTrash.splice(idx, 1);
             localStorage.setItem('my_todo_trash', JSON.stringify(todoTrash));
