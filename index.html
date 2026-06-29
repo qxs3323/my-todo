@@ -204,7 +204,7 @@
         .header-bar { width: 100%; max-width: 1140px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 36px; position: relative; z-index: 100; gap: 16px; animation: headerSlideIn 0.7s var(--transition-elastic); }
         .app-title { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.5px; background: linear-gradient(90deg, var(--accent-todo), var(--accent-idea), var(--accent-todo)); background-size: 200% 100%; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: titleFlow 4s linear infinite; }
         /* 【修复1】titleFlow 从 0%→100% 实现平滑单向左→右流动，不再来回震荡 */
-        @keyframes titleFlow { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+        @keyframes titleFlow { 0% { background-position: 200% 50%; } 100% { background-position: 0% 50%; } }
         .header-right-group { display: flex; align-items: center; gap: 16px; }
         .header-user { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--text-muted); }
         .header-user strong { color: var(--text-main); font-weight: 600; }
