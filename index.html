@@ -11,6 +11,7 @@
         const supabaseKey = 'sb_publishable_YaPCqd25hTc_xD-8ZOPZ0g_ssm05UU6';
         const { createClient } = window.supabase;
         // 【修复 5】配置 auth 持久化 + 自动刷新 + 关闭自动检测（手动处理回调避免冲突）
+        //测试环境配置
         const supabaseClient = createClient(supabaseUrl, supabaseKey, {
             auth: {
                 persistSession: true,
