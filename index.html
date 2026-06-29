@@ -746,9 +746,8 @@
                     const idx = todos.findIndex(t => t.id === tempId);
                     if (idx !== -1) {
                         todos[idx] = data[0];
-                        // 更新 DOM 中的 data-id
-                        const el = document.querySelector(`.todo-item[data-id="${tempId}"]`);
-                        if (el) el.dataset.id = data[0].id;
+                        // 重新渲染列表，静默更新所有的真实 ID 事件绑定
+                        renderTodos();
                     }
                 } else {
                     // 回滚
@@ -916,6 +915,13 @@
                         ideas[idx] = data[0];
                         const el = document.querySelector(`.idea-card[data-idea-id="${tempId}"]`);
                         if (el) el.dataset.ideaId = data[0].id;
+                    }
+                if (!error && data && data[0]) {
+                    const idx = ideas.findIndex(x => x.id === tempId);
+                    if (idx !== -1) {
+                        ideas[idx] = data[0];
+                        // 重新渲染列表，静默更新所有的真实 ID 事件绑定
+                        renderIdeas(); 
                     }
                 } else {
                     ideas = ideas.filter(x => x.id !== tempId);
